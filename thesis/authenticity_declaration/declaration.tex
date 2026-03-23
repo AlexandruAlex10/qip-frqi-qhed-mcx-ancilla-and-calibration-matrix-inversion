@@ -1,0 +1,53 @@
+\documentclass[12pt]{article}
+\usepackage[a4paper, margin=25mm]{geometry}
+\usepackage[romanian]{babel}
+\usepackage{nimbusmono}
+\usepackage{nimbussans}
+\usepackage[T1]{fontenc}
+\usepackage{enumitem}
+
+\renewcommand*\familydefault{\sfdefault}
+\linespread{1.4}
+\renewcommand*{\thefootnote}{*}
+\frenchspacing
+\hyphenpenalty=9000
+\tolerance=9000
+
+\input{customs.tex}
+
+\newcommand{\field}[1]{\textbf{\MakeUppercase{#1}}}
+
+\begin{document}
+	\pagestyle{empty}
+	\vfill\noindent
+	\begin{center}
+		\large
+		\textbf{DECLARAŢIE DE AUTENTICITATE A \\ LUCRĂRII DE FINALIZARE A STUDIILOR \footnote{Declaraţia se completează „de mână” şi se inserează în lucrarea de finalizare a studiilor, la sfârşitul acesteia, ca parte integrantă.}}
+	\end{center}
+	\vspace{24pt}
+	Subsemnatul \field{\candidateName},
+	legitimat cu \field{\idType} seria \field{\idSerie} nr. \field{\idNumber},
+	CNP \field{\cnp},
+	autorul lucrării \field{\thesisTitle} elaborată în vederea susţinerii examenului de finalizare a studiilor de \field{\studyType} organizat de către Facultatea \field{\faculty} din cadrul Universităţii Politehnica Timişoara, sesiunea \field{\monthOfPresentation} a anului universitar \field{\academicYear}, coordonator \textbf{\coordinator}, luând în considerare conţinutul art. 34 din \textit{Regulamentul privind organizarea și desfășurarea examenelor de licență/diplomă și disertație}, aprobat prin HS nr. 109/14.05.2020 și cunoscând faptul că în cazul constatării ulterioare a unor declaraţii false, voi suporta sancțiunea administrativă prevăzută de art. 146 din Legea nr. 1/2011 – legea educației naționale și anume anularea diplomei de studii, declar pe proprie răspundere, că:
+    \setlist{nolistsep}
+	\begin{itemize}[noitemsep]
+		\setlength\itemsep{0pt}
+		\item această lucrare este rezultatul propriei activități intelectuale,
+		\item lucrarea nu conține texte, date sau elemente de grafică din alte lucrări sau din alte surse fără ca acestea să nu fie citate, inclusiv situația în care sursa o reprezintă o altă lucrare/alte lucrări ale subsemnatului.
+		\item sursele bibliografice au fost folosite cu respectarea legislaţiei române şi a convenţiilor internaţionale privind drepturile de autor.
+		\item această lucrare nu a mai fost prezentată în fața unei alte comisii de examen de licență/diplomă/disertație.
+	\end{itemize}
+	\vfill
+	Timișoara,\par
+	\vspace{12pt}
+	\hfill%
+	\begin{tabular}[t]{c}
+		Data\\[1em] \rule{10em}{0.4pt}
+	\end{tabular}%
+	\hfill%
+	\begin{tabular}[t]{c}
+		Semnătura\\[1em] \rule{10em}{0.4pt}
+	\end{tabular}%
+	\hfill\strut
+	\vspace*{24pt}
+\end{document}
