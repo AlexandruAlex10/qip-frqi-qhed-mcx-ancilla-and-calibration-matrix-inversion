@@ -7,3 +7,4 @@ scikit-image>=0.22
 pandas>=2.2
 tqdm>=4.66
 jupyterlab>=4.0
+pytest>=7.0
