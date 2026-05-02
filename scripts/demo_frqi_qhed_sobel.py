@@ -1,4 +1,13 @@
 
+"""Demo script for FRQI, QHED, and Sobel edge detection.
+
+This script loads test images, constructs their FRQI statevectors,
+reconstructs the images from the statevectors, and computes edge maps
+using both the QHED baseline and classical Sobel method.
+It then compares the results using MSE, PSNR, and a similarity metric,
+and saves comparison figures.
+"""
+
 from __future__ import annotations
 
 import os

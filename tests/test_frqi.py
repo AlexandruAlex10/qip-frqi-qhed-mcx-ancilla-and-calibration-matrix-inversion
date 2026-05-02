@@ -1,4 +1,13 @@
 
+"""Tests for FRQI encoding and decoding functions.
+
+These tests cover:
+- Validation of grayscale images (non-square, invalid values)
+- Calculation of required position qubits
+- Conversion of pixel values to angles
+- Round-trip encoding and decoding of small images (4x4, 8x8)
+"""
+
 import os
 import sys
 

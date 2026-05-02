@@ -1,4 +1,13 @@
 
+"""Metrics for evaluating image quality, such as PSNR and a simple SSIM-like score.
+
+PSNR (Peak Signal-to-Noise Ratio) is a common metric for measuring the quality of
+reconstructed images compared to reference images. It is defined as:
+PSNR = 20 * log10(MAX_I) - 10 * log10(MSE)
+where MAX_I is the maximum possible pixel value of the image (e.g., 255 for 8-bit images)
+and MSE is the mean squared error between the two images.
+"""
+
 from __future__ import annotations
 
 import numpy as np

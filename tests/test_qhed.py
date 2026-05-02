@@ -1,4 +1,12 @@
 
+"""Tests for QHED edge detection functions.
+
+These tests cover:
+- Output shape of edge maps
+- Non-constant output for simple edge patterns
+- Pipeline output structure
+- Classical Sobel edge map output shape"""
+
 import os
 import sys
 

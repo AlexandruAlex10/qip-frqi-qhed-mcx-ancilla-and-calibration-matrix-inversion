@@ -1,12 +1,311 @@
-@article{einstein,
-    author = "Albert Einstein",
-    title = "{Zur Elektrodynamik bewegter K{\"o}rper}. ({German})
-    [{On} the electrodynamics of moving bodies]",
-    journal = "Annalen der Physik",
-    volume = "322",
-    number = "10",
-    pages = "891--921",
-    year = "1905",
-    DOI = "http://dx.doi.org/10.1002/andp.19053221004",
-    keywords = "physics"
+% Bibliography notes
+
+% Core thesis backbone:
+% - FRQI
+% - NEQR
+% - Quantum image processing and edge detection
+% - QSobel and the NEQR edge-detection family
+% - Hybrid NISQ edge detector
+% - Improved FRQI on superconducting processors
+% - FRQI + modified QHED paper
+
+% State of the art:
+% - Surveys by Ruan et al. (2021), Wang et al. (2022), Ebrahimpour-Komleh & Hadipour (2024), Farooq et al. (2025)
+% - Representation papers by Su et al. (2020), Amankwah et al. (2022), Das & Caruso (2023), Dutta et al. (2021)
+
+% Implementation support:
+% - Multi-controlled gate decomposition papers: Vale et al. (2023), Azevedo et al. (2024), Arsoski (2024), Zindorf et al. (2024)
+% - Image-filtering implementation: Mu et al. (2025)
+
+@article{Le2011FRQI,
+  title        = {A Flexible Representation of Quantum Images},
+  author       = {Le, Phuc Q. and Dong, Fan and Hirota, Kaoru},
+  journal      = {Quantum Information Processing},
+  year         = {2011},
+  doi          = {10.1007/s11128-010-0177-y},
+  url          = {https://doi.org/10.1007/s11128-010-0177-y}
+}
+
+@article{Zhang2013NEQR,
+  title        = {A Novel Enhanced Quantum Representation of Digital Images},
+  author       = {Zhang, Yi and Lu, Kai and Gao, Yinghui and Wang, Min},
+  journal      = {Quantum Information Processing},
+  volume       = {12},
+  number       = {8},
+  pages        = {2833--2860},
+  year         = {2013},
+  doi          = {10.1007/s11128-013-0567-z},
+  url          = {https://doi.org/10.1007/s11128-013-0567-z}
+}
+
+@article{Yao2017QHED,
+  title        = {Quantum Image Processing and Its Application to Edge Detection: Theory and Experiment},
+  author       = {Yao, Xi-Wei and Wang, Hengyan and Liao, Zeyang and Chen, Ming-Cheng and Pan, Jian and Li, Jun and Zhang, Kechao and Lin, Xingcheng and Wang, Zhehui and Luo, Zhihuang and Zheng, Wenqiang and Li, Jianzhong and Zhao, Meisheng and Peng, Xinhua and Suter, Dieter},
+  journal      = {Physical Review X},
+  volume       = {7},
+  number       = {3},
+  pages        = {031041},
+  year         = {2017},
+  doi          = {10.1103/PhysRevX.7.031041},
+  url          = {https://doi.org/10.1103/PhysRevX.7.031041}
+}
+
+@article{Iliyasu2013FRQIroadmap,
+  title        = {Towards Realising Secure and Efficient Image and Video Processing Applications on Quantum Computers},
+  author       = {Iliyasu, Abdullah M. and others},
+  journal      = {Entropy},
+  volume       = {15},
+  number       = {8},
+  pages        = {2874--2897},
+  year         = {2013},
+  doi          = {10.3390/e15082874},
+  url          = {https://www.mdpi.com/1099-4300/15/8/2874}
+}
+
+@article{Yan2014QImageRepresentation,
+  title        = {Quantum Computation-Based Image Representation},
+  author       = {Yan, Feng},
+  journal      = {Entropy},
+  volume       = {16},
+  number       = {10},
+  pages        = {5290--5306},
+  year         = {2014},
+  doi          = {10.3390/e16105290},
+  url          = {https://www.mdpi.com/1099-4300/16/10/5290}
+}
+
+@article{Zhang2015QSobel,
+  title        = {QSobel: A Novel Quantum Image Edge Extraction Algorithm},
+  author       = {Zhang, Yi and Lu, Kai and Gao, Yinghui},
+  journal      = {Science China Information Sciences},
+  volume       = {58},
+  number       = {1},
+  pages        = {1--13},
+  year         = {2015},
+  doi          = {10.1007/s11432-014-5158-9},
+  url          = {https://doi.org/10.1007/s11432-014-5158-9}
+}
+
+@article{Fan2019SobelNEQR,
+  title        = {Quantum Image Edge Extraction Based on Classical Sobel Operator for NEQR},
+  author       = {Fan, Ping and Zhou, Ri-Gui and Hu, Wenwen and Jing, Naihuan},
+  journal      = {Quantum Information Processing},
+  volume       = {18},
+  number       = {1},
+  pages        = {24},
+  year         = {2019},
+  doi          = {10.1007/s11128-018-2131-3},
+  url          = {https://doi.org/10.1007/s11128-018-2131-3}
+}
+
+@article{Zhou2019PrewittNEQR,
+  title        = {Quantum Image Edge Extraction Based on Improved Prewitt Operator},
+  author       = {Zhou, Ri-Gui and Yu, Han and Cheng, Yu and Li, Feng-Xin},
+  journal      = {Quantum Information Processing},
+  volume       = {18},
+  number       = {9},
+  pages        = {261},
+  year         = {2019},
+  doi          = {10.1007/s11128-019-2376-5},
+  url          = {https://doi.org/10.1007/s11128-019-2376-5}
+}
+
+@article{Xu2020Kirsch,
+  title        = {Quantum Image Processing Algorithm Using Edge Extraction Based on Kirsch Operator},
+  author       = {Xu, Pengao and He, Zhenxing and Qiu, Tianhui and Ma, Hongyang},
+  journal      = {Optics Express},
+  volume       = {28},
+  number       = {9},
+  pages        = {12508--12517},
+  year         = {2020},
+  doi          = {10.1364/OE.386283},
+  url          = {https://doi.org/10.1364/OE.386283}
+}
+
+@article{Chetia2021ImprovedSobelNEQR,
+  title        = {Quantum Image Edge Detection Using Improved Sobel Mask Based on NEQR},
+  author       = {Chetia, Rajib and Boruah, S. M. B. and Sahu, P. P.},
+  journal      = {Quantum Information Processing},
+  volume       = {20},
+  number       = {1},
+  pages        = {21},
+  year         = {2021},
+  doi          = {10.1007/s11128-020-02944-7},
+  url          = {https://doi.org/10.1007/s11128-020-02944-7}
+}
+
+@article{Liu2022EightDirectionSobelNEQR,
+  title        = {Quantum Image Edge Detection Based on Eight-Direction Sobel Operator for NEQR},
+  author       = {Liu, Wenjie and Wang, Lu},
+  journal      = {Quantum Information Processing},
+  volume       = {21},
+  pages        = {190},
+  year         = {2022},
+  doi          = {10.1007/s11128-022-03527-4},
+  url          = {https://doi.org/10.1007/s11128-022-03527-4}
+}
+
+@article{Geng2022HybridNISQEdge,
+  title        = {A Hybrid Quantum Image Edge Detector for the NISQ Era},
+  author       = {Geng, Alexander and Moghiseh, Ali and Redenbach, Claudia and Schladitz, Katja},
+  journal      = {Quantum Machine Intelligence},
+  volume       = {4},
+  number       = {2},
+  pages        = {15},
+  year         = {2022},
+  doi          = {10.1007/s42484-022-00071-3},
+  url          = {https://doi.org/10.1007/s42484-022-00071-3}
+}
+
+@article{Geng2023ImprovedFRQI,
+  title        = {Improved FRQI on Superconducting Processors and Its Restrictions in the NISQ Era},
+  author       = {Geng, Alexander and Moghiseh, Ali and Redenbach, Claudia and Schladitz, Katja},
+  journal      = {Quantum Information Processing},
+  year         = {2023},
+  doi          = {10.1007/s11128-023-03838-0},
+  url          = {https://doi.org/10.1007/s11128-023-03838-0}
+}
+
+@article{Shubha2024EdgeDetectionQuantumized,
+  title        = {Edge Detection Quantumized: A Novel Quantum Algorithm for Image Processing},
+  author       = {Shubha, Syed Emad Uddin and Islam, Mir Muzahedul and Sadi, Tanvir Ahahmed and Miraz, Md. Hasibul Hasan and Mahdy, M. R. C.},
+  journal      = {arXiv preprint arXiv:2404.06889},
+  year         = {2024},
+  url          = {https://arxiv.org/abs/2404.06889}
+}
+
+@article{Amankwah2022QPIXL,
+  title        = {Quantum Pixel Representations and Compression for N-Dimensional Images},
+  author       = {Amankwah, Mercy G. and Camps, Daan and Bethel, E. Wes and Van Beeumen, Roel and Perciano, Talita},
+  journal      = {Scientific Reports},
+  volume       = {12},
+  number       = {1},
+  pages        = {7712},
+  year         = {2022},
+  doi          = {10.1038/s41598-022-11024-y},
+  url          = {https://doi.org/10.1038/s41598-022-11024-y}
+}
+
+@article{Das2023HybridQuditRGB,
+  title        = {A Hybrid-Qudit Representation of Digital RGB Images},
+  author       = {Das, Sreetama and Caruso, Filippo},
+  journal      = {Scientific Reports},
+  volume       = {13},
+  number       = {1},
+  pages        = {13671},
+  year         = {2023},
+  doi          = {10.1038/s41598-023-39906-9},
+  url          = {https://doi.org/10.1038/s41598-023-39906-9}
+}
+
+@article{Dutta2021QuantumMechanicsBased,
+  title        = {Quantum Mechanics-Based Signal and Image Representation: Application to Denoising},
+  author       = {Dutta, Sayantan and Basarab, Adrian and Georgeot, Bertrand and Kouam{\'e}, Denis},
+  journal      = {IEEE Open Journal of Signal Processing},
+  volume       = {2},
+  pages        = {190--206},
+  year         = {2021},
+  doi          = {10.1109/OJSP.2021.3068645},
+  url          = {https://doi.org/10.1109/OJSP.2021.3068645}
+}
+
+@article{Su2020NewTrend,
+  title        = {A New Trend of Quantum Image Representations},
+  author       = {Su, Jie and Guo, Xuchao and Liu, Chengqi and Li, Lin},
+  journal      = {IEEE Access},
+  volume       = {8},
+  pages        = {214520--214537},
+  year         = {2020},
+  doi          = {10.1109/ACCESS.2020.3039996},
+  url          = {https://doi.org/10.1109/ACCESS.2020.3039996}
+}
+
+@article{Ruan2021OpportunitiesChallenges,
+  title        = {Quantum Image Processing: Opportunities and Challenges},
+  author       = {Ruan, Yue and Xue, Xiling and Shen, Yuanxia},
+  journal      = {Mathematical Problems in Engineering},
+  volume       = {2021},
+  pages        = {1--8},
+  year         = {2021},
+  doi          = {10.1155/2021/6671613},
+  url          = {https://doi.org/10.1155/2021/6671613}
+}
+
+@article{Wang2022ReviewQIP,
+  title        = {Review of Quantum Image Processing},
+  author       = {Wang, Zhaobin and Xu, Minzhe and Zhang, Yaonan},
+  journal      = {Archives of Computational Methods in Engineering},
+  volume       = {29},
+  number       = {2},
+  pages        = {737--761},
+  year         = {2022},
+  doi          = {10.1007/s11831-021-09599-2},
+  url          = {https://doi.org/10.1007/s11831-021-09599-2}
+}
+
+@article{EbrahimpourKomleh2024QuantumComputingImageProcessing,
+  title        = {Quantum Computing in Image Processing: A Comprehensive Survey of Applications, Challenges, and Future Directions},
+  author       = {Ebrahimpour-Komleh, Hossein and Hadipour, Ali},
+  journal      = {Artificial Intelligence Applications and Innovations},
+  volume       = {1},
+  number       = {2},
+  pages        = {9--25},
+  year         = {2024},
+  doi          = {10.61838/jaiai.1.2.2},
+  url          = {https://doi.org/10.61838/jaiai.1.2.2}
+}
+
+@article{Farooq2025SystematicReview,
+  title        = {A Systematic Review of Quantum Image Processing: Representation, Applications and Future Perspectives},
+  author       = {Farooq, Umar and Singh, Parvinder and Kumar, Atul},
+  journal      = {Computer Science Review},
+  volume       = {57},
+  pages        = {100763},
+  year         = {2025},
+  doi          = {10.1016/j.cosrev.2025.100763},
+  url          = {https://doi.org/10.1016/j.cosrev.2025.100763}
+}
+
+@article{Mu2025GuidedImageFiltering,
+  title        = {Quantum Implementation of the Classical Guided Image Filtering Algorithm},
+  author       = {Mu, Jiale and Li, Xiaofei and Zhang, Xianghua and Wang, Pinghe},
+  journal      = {Scientific Reports},
+  volume       = {15},
+  number       = {1},
+  pages        = {493},
+  year         = {2025},
+  doi          = {10.1038/s41598-024-84211-8},
+  url          = {https://doi.org/10.1038/s41598-024-84211-8}
+}
+
+@article{Vale2023MCSU2,
+  title        = {Decomposition of Multi-Controlled Special Unitary Single-Qubit Gates},
+  author       = {Vale, Rafaella and Azevedo, Thiago Melo D. and Araujo, Ismael C. S. and Araujo, Israel F. and Silva, Adenilton J. da},
+  journal      = {arXiv preprint arXiv:2302.06377},
+  year         = {2023},
+  url          = {https://arxiv.org/abs/2302.06377}
+}
+
+@article{Azevedo2024LowDepthMCG,
+  title        = {Low-depth Quantum Circuit Decomposition of Multi-controlled Gates},
+  author       = {Azevedo, Thiago Melo D. and Silva, Jefferson D. S. and Silva, Adenilton J. da},
+  journal      = {arXiv preprint arXiv:2407.05162},
+  year         = {2024},
+  url          = {https://arxiv.org/abs/2407.05162}
+}
+
+@article{Arsoski2024MCXQFT,
+  title        = {Implementing Multi-controlled X Gates Using the Quantum Fourier Transform},
+  author       = {Arsoski, Vladimir V.},
+  journal      = {arXiv preprint arXiv:2407.18024},
+  year         = {2024},
+  url          = {https://arxiv.org/abs/2407.18024}
+}
+
+@article{Zindorf2024EfficientMCG,
+  title        = {Efficient Implementation of Multi-controlled Quantum Gates},
+  author       = {Zindorf, Benjamin and others},
+  journal      = {arXiv preprint arXiv:2404.02279},
+  year         = {2024},
+  url          = {https://arxiv.org/abs/2404.02279}
 }
