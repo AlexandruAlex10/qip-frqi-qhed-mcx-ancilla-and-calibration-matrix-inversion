@@ -22,6 +22,39 @@ def psnr(a: np.ndarray, b: np.ndarray, data_range: float = 255.0) -> float:
     return 20.0 * np.log10(data_range) - 10.0 * np.log10(mse)
 
 
+def ssim_uint8(a: np.ndarray, b: np.ndarray, *, data_range: float = 255.0) -> float:
+    """Structural similarity (SSIM) for 2D grayscale images via scikit-image.
+
+    Expects spatially aligned arrays of the same shape. ``data_range`` should
+    match the intensity scale (255 for uint8-style images).
+    """
+    from skimage.metrics import structural_similarity
+
+    a = np.asarray(a)
+    b = np.asarray(b)
+    if a.shape != b.shape:
+        raise ValueError("Inputs must have the same shape.")
+
+    min_side = min(a.shape[:2])
+    win_size = min(7, min_side)
+    if win_size % 2 == 0:
+        win_size -= 1
+    if win_size < 3:
+        raise ValueError(
+            "Images must be at least 3x3 for SSIM computation."
+        )
+
+    return float(
+        structural_similarity(
+            a,
+            b,
+            data_range=data_range,
+            channel_axis=None,
+            win_size=win_size,
+        )
+    )
+
+
 def ssim_like(a: np.ndarray, b: np.ndarray) -> float:
     """Lightweight similarity score in [-1, 1], not a full SSIM implementation.
     Kept simple to avoid extra dependencies in Week 2.

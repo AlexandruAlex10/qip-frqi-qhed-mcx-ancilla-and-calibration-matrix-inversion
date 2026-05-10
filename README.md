@@ -53,4 +53,13 @@ pytest
 python scripts\demo_frqi_qhed_sobel.py
 ```
 
-This saves comparison figures in `outputs/`.
+This writes the following artifacts in folder `outputs/`:
+
+- **Figures**: for each test image, a comparison image is being created (original, QHED, Sobel) and a reconstruction image (original vs FRQI reconstruction).
+- **Metrics**: a CSV file with one row per image. Columns include important statistics gathered while running the demo.
+
+The printed demo output includes both the legacy function `ssim_like` score and **scikit-image SSIM** (function `ssim_uint8`).
+
+### FRQI resource counts
+
+Transpiled depth and CX counts in the CSV refer to Qiskit synthesis of the **exact** FRQI statevector via `QuantumCircuit.initialize()` (`frqi_circuit_kind` = `initialize`), using basis gates `cx`, `rz`, `sx` at optimization level 3. They do **not** yet describe a hand-built FRQI circuit with explicit multi-controlled rotations; that structural baseline is intended for the improvement chapter.

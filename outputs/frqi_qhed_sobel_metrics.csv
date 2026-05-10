@@ -1,0 +1,4 @@
+image,size,frqi_mse,frqi_psnr,frqi_ssim_skimage,qhed_vs_sobel_ssim_skimage,frqi_circuit_kind,basis_gates,transpile_optimization_level,frqi_qubits,frqi_depth_transpiled,frqi_cx_transpiled,frqi_transpiled_gate_count
+test_4x4,4,0.0,inf,1.0,1.0,initialize,"cx,rz,sx",3,5,11,3,27
+test_8x8,8,0.0,inf,1.0,0.163440838690678,initialize,"cx,rz,sx",3,7,66,15,90
+test_16x16,16,0.0,inf,1.0,0.013335978391734728,initialize,"cx,rz,sx",3,9,839,255,871
