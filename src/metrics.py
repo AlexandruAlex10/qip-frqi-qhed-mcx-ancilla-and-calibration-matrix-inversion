@@ -1,5 +1,6 @@
 
-"""Metrics for evaluating image quality, such as PSNR and a simple SSIM-like score.
+"""
+Metrics for evaluating image quality, such as PSNR and a simple SSIM-like score.
 
 PSNR (Peak Signal-to-Noise Ratio) is a common metric for measuring the quality of
 reconstructed images compared to reference images. It is defined as:

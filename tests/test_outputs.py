@@ -1,4 +1,6 @@
-"""Week 3: skimage SSIM, transpiled circuit stats (4×4 only, fast)."""
+"""
+Skimage SSIM, transpiled circuit stats (4×4 only, fast).
+"""
 
 from __future__ import annotations
 

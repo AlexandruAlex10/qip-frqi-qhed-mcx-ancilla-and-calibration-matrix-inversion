@@ -1,5 +1,6 @@
 
-"""Minimal Hadamard-based baseline edge detector
+"""
+Minimal Hadamard-based baseline edge detector
 
 This is a simple, reproducible baseline inspired by Hadamard-transform edge detection
 ideas. It is intentionally lightweight so it runs without a full quantum SDK.

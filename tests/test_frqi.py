@@ -1,5 +1,6 @@
 
-"""Tests for FRQI encoding and decoding functions.
+"""
+Tests for FRQI encoding and decoding functions.
 
 These tests cover:
 - Validation of grayscale images (non-square, invalid values)

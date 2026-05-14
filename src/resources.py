@@ -1,4 +1,6 @@
-"""Quantum circuit resource counts after transpilation."""
+"""
+Quantum circuit resource counts after transpilation.
+"""
 
 from __future__ import annotations
 

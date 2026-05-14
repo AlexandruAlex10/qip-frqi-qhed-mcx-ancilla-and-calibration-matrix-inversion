@@ -1,5 +1,6 @@
 
-"""FRQI state preparation and reconstruction utilities.
+"""
+FRQI state preparation and reconstruction utilities.
 
 This module provides a minimal, exact FRQI statevector construction for
 grayscale images whose width and height are equal powers of two.
@@ -107,7 +108,7 @@ def l2_error(original: np.ndarray, reconstructed: np.ndarray) -> float:
 def maybe_build_qiskit_circuit(image: np.ndarray):
     """Optional helper: build an exact initialization circuit if Qiskit is installed.
 
-    This is not needed for the Week 2 tests, but is useful for later work.
+    Useful for later work.
     """
     try:
         from qiskit import QuantumCircuit
