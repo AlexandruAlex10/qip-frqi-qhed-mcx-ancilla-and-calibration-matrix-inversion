@@ -1,0 +1,11 @@
+image,image_size,m,kind,notes,scale,basis_gates,transpile_optimization_level,num_qubits,depth,cx,transpiled_gate_count,single_qubit_gates
+test_4x4,4,4,struct_vchain,full prep + H on position,1,"cx,rz,sx",3,8,839,331,959,628
+test_8x8,8,6,struct_vchain,full prep + H on position,1,"cx,rz,sx",3,12,5423,2147,6076,3929
+test_16x16,16,8,struct_vchain,full prep + H on position,1,"cx,rz,sx",3,16,29435,11663,31997,20334
+test_4x4,4,4,struct_naive_full,full naive prep (4×4 only),1,"cx,rz,sx",3,6,2246,944,2768,1824
+test_4x4,4,4,struct_naive_slice,"one address-0 slice, theta=pi/4",1,"cx,rz,sx",3,6,130,50,169,119
+test_4x4,4,4,struct_naive_slice_scaled,slice stats × N_pix=16 (linear MCX scaling estimate),16,"cx,rz,sx",3,6,2080,800,2704,1904
+test_8x8,8,6,struct_naive_slice,"one address-0 slice, theta=pi/4",1,"cx,rz,sx",3,8,209,86,297,211
+test_8x8,8,6,struct_naive_slice_scaled,slice stats × N_pix=64 (linear MCX scaling estimate),64,"cx,rz,sx",3,8,13376,5504,19008,13504
+test_16x16,16,8,struct_naive_slice,"one address-0 slice, theta=pi/4",1,"cx,rz,sx",3,10,288,122,427,305
+test_16x16,16,8,struct_naive_slice_scaled,slice stats × N_pix=256 (linear MCX scaling estimate),256,"cx,rz,sx",3,10,73728,31232,109312,78080

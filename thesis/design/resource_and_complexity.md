@@ -28,17 +28,35 @@ These columns are **reference only** — they do **not** match the structural mu
 
 **\(m = 2\log_2 N\)**. **Ancilla column** is the **documented upper bound** for one v-chain MCX at a time (**\(m-2\)** for \(m \ge 3\)); \(m=4\) gives \(m-2=2\).
 
-| Image | \(N_{\text{pix}}\) | \(m\) | Data qubits \(m+1\) | Ancilla (v-chain UB) | Initialize ref: qubits | Initialize ref: depth | Initialize ref: CX | Explicit structural (transpiled) |
-|-------|-------------------|-------|----------------------|----------------------|-------------------------|------------------------|---------------------|-------------------------------------|
-| \(4\times 4\) | 16 | 4 | 5 | 2 | 5 | 11 | 3 | **TBD** (Next step) |
-| \(8\times 8\) | 64 | 6 | 7 | 4 | 7 | 66 | 15 | **TBD** |
-| \(16\times 16\) | 256 | 8 | 9 | 6 | 9 | 839 | 255 | **TBD** |
+| Image | \(N_{\text{pix}}\) | \(m\) | Data qubits \(m+1\) | Ancilla (v-chain UB) | Initialize ref: qubits | Initialize ref: depth | Initialize ref: CX | Structural v-chain (transpiled depth / CX / gates) |
+|-------|-------------------|-------|----------------------|----------------------|-------------------------|------------------------|---------------------|--------------------------------------------------------|
+| \(4\times 4\) | 16 | 4 | 5 | 2 | 5 | 11 | 3 | **839 / 331 / 959** |
+| \(8\times 8\) | 64 | 6 | 7 | 4 | 7 | 66 | 15 | **5423 / 2147 / 6076** |
+| \(16\times 16\) | 256 | 8 | 9 | 6 | 9 | 839 | 255 | **29435 / 11663 / 31997** |
 
 **Symbolic orders (improved path, leading term):**
 
 - **Total CX (order):** \(\Theta(N_{\text{pix}} \cdot m) = \Theta(N^2 \log N)\).
 - **Example mental check:** \(N=16 \Rightarrow m=8 \Rightarrow\) **64** address-controlled steps each needing **\(O(m)\)** CX \(\Rightarrow\) hundreds to low thousands of CX **before** transpilation to **`cx,rz,sx`** — still expected to differ from **`initialize`** synthesis totals in the CSV.
 
-## 4. Next step fill-in
+## 4. Measured structural counts and naive extrapolation
 
-After constructing the circuits, re-run **`transpiled_circuit_stats`** (`src/resources.py`) with the **same** `basis_gates` and `optimization_level` as the demo, and replace **TBD** with measured **depth / CX / size** for the structural implementation.
+**Toolchain:** numbers below were produced with **Qiskit 2.4.x**, `basis_gates = ['cx','rz','sx']`, `optimization_level = 3`, via `transpiled_circuit_stats` (`src/resources.py`). Regenerate after upgrades with:
+
+```bash
+python scripts/frqi_structural_resources.py
+```
+
+Canonical CSV: **`outputs/frqi_structural_metrics.csv`** (rows `struct_vchain`).
+
+**Circuit semantics:** `src/improved.build_frqi_prep_vchain` applies a **Hadamard layer on the position register** (color stays \(|0\rangle\)), then the per-pixel v-chain MCX + `cry(2\theta_p)` + uncompute loop so the data register matches `build_frqi_statevector` (Qiskit `Ry` uses half-angles; the factor \(2\) aligns intensities with `src/frqi.py`).
+
+**Transpiled width:** the v-chain layout uses **\(2m\)** total qubits on the wire list (see `src/improved.py`); after transpilation the counts in the table match the **physical** `num_qubits` column in the CSV (e.g. \(8\) for \(N=4\), \(m=4\)).
+
+### 4.1 Naive structural baseline (reporting estimate)
+
+Full naive FRQI (`build_frqi_prep_naive`) is included for **\(4\times 4\)** only in the CSV (`struct_naive_full`: depth **2246**, CX **944**, gates **2768** on this toolchain).
+
+For **\(8\times 8\)** and **\(16\times 16\)**, the CSV uses **`struct_naive_slice_scaled`**: transpile a **single** representative `noancilla` MCX + `cry` slice (`build_single_address_ry_slice`, address \(0\), \(\theta=\pi/4\)), then multiply **depth, CX, and total gate count** by \(N_{\text{pix}} = 2^m\). This isolates the **multi-controlled-\(X\)** skeleton cost and avoids an intractable full naive transpile at large \(m\), at the cost of ignoring per-pixel angle variation in the `cry` decomposition (documented caveat in `outputs/frqi_structural_metrics.csv`, `notes` column).
+
+**Scaled naive totals (slice \(\times N_{\text{pix}}\)):** \(8\times 8\) — depth **13376**, CX **5504**, gates **19008**; \(16\times 16\) — depth **73728**, CX **31232**, gates **109312**.
