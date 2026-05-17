@@ -78,6 +78,42 @@ def build_frqi_statevector(image: np.ndarray) -> np.ndarray:
     return state
 
 
+def reconstruct_image_from_reduced_density_matrix(rho, image_size: int) -> np.ndarray:
+    """Recover a grayscale image from the reduced FRQI density matrix (color + position).
+
+    Uses the same index convention as :func:`reconstruct_image_from_statevector`. For mixed
+    states, pixel angles are inferred from diagonal populations of the color qubit at each
+    fixed address.
+    Formula: theta_p = arctan2(sqrt{rho_{2p+1,2p+1}}, sqrt{rho_{2p,2p}}),
+    which agrees with the statevector rule when the state is pure FRQI.
+
+    ``rho`` may be a :class:`qiskit.quantum_info.DensityMatrix` or a complex square array.
+    """
+    if not is_power_of_two(image_size):
+        raise ValueError("image_size must be a power of two.")
+    n_pixels = image_size * image_size
+    dim = 2 * n_pixels
+    if hasattr(rho, "data"):
+        mat = np.asarray(rho.data, dtype=np.complex128)
+    else:
+        mat = np.asarray(rho, dtype=np.complex128)
+    mat = mat.reshape(dim, dim)
+    if mat.shape != (dim, dim):
+        raise ValueError(f"Expected reduced density matrix of shape {(dim, dim)}, got {mat.shape}.")
+
+    intensities = np.zeros(n_pixels, dtype=np.float64)
+    for p in range(n_pixels):
+        d0 = max(float(np.real(mat[2 * p, 2 * p])), 0.0)
+        d1 = max(float(np.real(mat[2 * p + 1, 2 * p + 1])), 0.0)
+        a0, a1 = np.sqrt(d0), np.sqrt(d1)
+        if a0 == 0.0 and a1 == 0.0:
+            theta = 0.0
+        else:
+            theta = float(np.arctan2(a1, a0))
+        intensities[p] = (theta / (pi / 2.0)) * 255.0
+    return np.rint(intensities).astype(np.uint8).reshape((image_size, image_size))
+
+
 def reconstruct_image_from_statevector(statevector: np.ndarray, image_size: int) -> np.ndarray:
     """Recover the image from an ideal FRQI statevector."""
     if not is_power_of_two(image_size):
