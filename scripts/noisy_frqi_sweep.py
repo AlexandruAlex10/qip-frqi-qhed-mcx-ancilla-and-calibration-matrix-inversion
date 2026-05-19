@@ -4,6 +4,18 @@ Sweep noisy FRQI preparation (naive vs v-chain): CSV + matplotlib curves.
 Uses density-matrix simulation for depolarizing / thermal gate noise. Readout parameters
 scale with ``--scales`` for API consistency; readout does not affect the saved-state
 density matrix unless you use the optional ``--readout-demo`` shot branch.
+
+Default (``--images``): ``test_4x4,test_8x8,test_16x16`` with the same ``--scales``
+grid for every image that is actually simulated.
+
+**16×16 and Aer density matrices:** v-chain FRQI uses ``m+2+max(0,m-2)`` qubits (16 for
+``N=16``). A full density matrix then has dimension ``2^16``, i.e. ``(2^16)^2`` complex
+numbers — often tens of GiB of RAM and long wall times. This script therefore skips any
+``(image, method)`` pair whose simulated qubit count exceeds ``--dm-max-qubits`` (default
+14), unless ``--allow-heavy-dm`` is set. In practice, ``test_16x16`` + ``vchain`` is
+skipped by default while ``test_16x16`` + ``naive`` (10 qubits) still runs. For a full
+16×16 v-chain grid on a large machine, run with ``--allow-heavy-dm`` and prefer a **coarser**
+``--scales`` list (for example ``0,0.1,0.2``) to limit total simulations.
 """
 
 from __future__ import annotations
@@ -23,6 +35,7 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
 from src.frqi import required_position_qubits  # noqa: E402
+from src.improved import frqi_structural_num_qubits_naive_slice, frqi_structural_num_qubits_vchain  # noqa: E402
 from src.noise_models import (  # noqa: E402
     build_noise_model,
     noisy_frqi_metrics_row,
@@ -33,23 +46,50 @@ DATA = ROOT / "data" / "test_images"
 OUT = ROOT / "outputs"
 OUT.mkdir(exist_ok=True)
 
+IMAGES_DEFAULT = "test_4x4,test_8x8,test_16x16"
+
 
 def _parse_float_list(s: str) -> list[float]:
     return [float(x) for x in s.split(",") if x.strip()]
 
 
+def _dm_qubits_for_method(img: np.ndarray, method: str) -> int:
+    n = int(img.shape[0])
+    m = required_position_qubits(n)
+    if method == "vchain":
+        return frqi_structural_num_qubits_vchain(m)
+    if method == "naive":
+        return frqi_structural_num_qubits_naive_slice(m)
+    raise ValueError(method)
+
+
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Noisy FRQI metrics sweep (density matrix).")
+    ap = argparse.ArgumentParser(
+        description="Noisy FRQI metrics sweep (density matrix).",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
     ap.add_argument(
         "--images",
-        default="test_4x4",
-        help="Comma-separated stems under data/test_images (without .npy).",
+        default=IMAGES_DEFAULT,
+        help=f"Comma-separated stems under data/test_images (without .npy). Default: {IMAGES_DEFAULT!r}.",
     )
     ap.add_argument("--methods", default="naive,vchain", help="Comma-separated: naive,vchain")
     ap.add_argument(
         "--scales",
         default="0,0.05,0.1,0.15,0.2",
         help="Noise scale factors applied to baseline depolarizing / readout knobs.",
+    )
+    ap.add_argument(
+        "--dm-max-qubits",
+        type=int,
+        default=14,
+        help="Skip (image, method) if simulated qubit count exceeds this (RAM safety). Default 14.",
+    )
+    ap.add_argument(
+        "--allow-heavy-dm",
+        action="store_true",
+        help="Disable the qubit-count skip (may require huge RAM for 16×16 v-chain).",
     )
     ap.add_argument("--p1", type=float, default=0.004, help="Baseline 1Q depolarizing at scale 1.")
     ap.add_argument("--p2", type=float, default=0.02, help="Baseline 2Q depolarizing at scale 1.")
@@ -70,6 +110,7 @@ def main() -> None:
     images = [x.strip() for x in args.images.split(",") if x.strip()]
     methods = [x.strip() for x in args.methods.split(",") if x.strip()]
     scales = _parse_float_list(args.scales)
+    max_q = 10_000 if args.allow_heavy_dm else int(args.dm_max_qubits)
 
     rows: list[dict] = []
     for img_name in images:
@@ -86,6 +127,13 @@ def main() -> None:
                 readout_prob_10=args.r10 * s,
             )
             for method in methods:
+                nq = _dm_qubits_for_method(img, method)
+                if nq > max_q:
+                    print(
+                        f"Skip {img_name} {method}: {nq} qubits > dm-max {max_q}. "
+                        f"Use --allow-heavy-dm or raise --dm-max-qubits."
+                    )
+                    continue
                 r = noisy_frqi_metrics_row(
                     img,
                     method=method,
@@ -113,12 +161,18 @@ def main() -> None:
 
     for img_name in images:
         sub = df[df["image"] == img_name]
-        fig, axes = plt.subplots(1, 2, figsize=(9, 3.5))
+        if sub.empty:
+            print(f"No rows for {img_name}; skipping figure.")
+            continue
+        fig, axes = plt.subplots(1, 3, figsize=(12, 3.5))
         for method in methods:
             msub = sub[sub["method"] == method].sort_values("noise_scale")
+            if msub.empty:
+                continue
             axes[0].plot(msub["noise_scale"], msub["fidelity"], marker="o", label=method)
             psnr_vals = msub["psnr"].mask(np.isinf(msub["psnr"]))
             axes[1].plot(msub["noise_scale"], psnr_vals, marker="o", label=method)
+            axes[2].plot(msub["noise_scale"], msub["ssim"], marker="o", label=method)
         axes[0].set_title("Fidelity vs noise scale")
         axes[0].set_xlabel("scale")
         axes[0].set_ylabel("fidelity")
@@ -129,6 +183,11 @@ def main() -> None:
         axes[1].set_ylabel("PSNR (dB)")
         axes[1].grid(True, alpha=0.3)
         axes[1].legend()
+        axes[2].set_title("SSIM vs noise scale")
+        axes[2].set_xlabel("scale")
+        axes[2].set_ylabel("SSIM")
+        axes[2].grid(True, alpha=0.3)
+        axes[2].legend()
         fig.suptitle(f"Noisy FRQI — {img_name}")
         fig.tight_layout()
         fig.savefig(OUT / f"noisy_frqi_{img_name}_curves.png", dpi=160)

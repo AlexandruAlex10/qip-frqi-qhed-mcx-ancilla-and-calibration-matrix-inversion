@@ -6,7 +6,7 @@ This note freezes two comparison layers for gate-level FRQI preparation. It alig
 
 **Definition:** Build the exact FRQI statevector, then let Qiskit synthesize state preparation via `QuantumCircuit.initialize(state)` (`maybe_build_qiskit_circuit` in `src/frqi.py`).
 
-**Role:** Anchor for transpiled **depth**, **CX count**, and **gate size** after decomposition to the fixed basis **`cx`, `rz`, `sx`** at optimization level **3** (same as `scripts/demo_frqi_qhed_sobel.py` and `src/resources.py`).
+**Role:** Anchor for transpiled **depth**, **CX count**, and **gate size** after decomposition to the fixed basis **`cx`, `rz`, `sx`** at optimization level **3** (same as `scripts/frqi_qhed_sobel.py` and `src/resources.py`).
 
 **Important limitation (thesis Methods):** These metrics describe **automatic synthesis** of the full state, not a transparent sequence of “one rotation per pixel” on an address register. They must **not** be quoted as the structural cost of multi-controlled FRQI prep.
 

@@ -335,8 +335,13 @@ def noisy_frqi_metrics_row(
     method: str,
     noise_model: Optional[Any],
     seed_simulator: Optional[int] = None,
+    return_recon: bool = False,
 ) -> Dict[str, Any]:
-    """Density-matrix noisy FRQI run with PSNR/SSIM on the mixed-state reconstruction."""
+    """Density-matrix noisy FRQI run with PSNR/SSIM on the mixed-state reconstruction.
+
+    If ``return_recon`` is True, the returned mapping also contains key ``recon`` with the
+    reconstructed grayscale image (same dtype/shape as ``image``).
+    """
     from src.frqi import reconstruct_image_from_reduced_density_matrix, required_position_qubits
     from src.metrics import psnr, ssim_uint8
 
@@ -368,7 +373,7 @@ def noisy_frqi_metrics_row(
     except ValueError:
         s = float("nan")
 
-    return {
+    out: Dict[str, Any] = {
         "m": m,
         "total_qubits": total,
         "wall_s": wall,
@@ -376,3 +381,6 @@ def noisy_frqi_metrics_row(
         "psnr": p,
         "ssim": s,
     }
+    if return_recon:
+        out["recon"] = recon
+    return out
