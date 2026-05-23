@@ -1,0 +1,7 @@
+name: weak
+description: Low synthetic depolarizing + quiet readout (ablation baseline).
+noise:
+  p_depol_1q: 0.001
+  p_depol_2q: 0.005
+  readout_prob_01: 0.0
+  readout_prob_10: 0.0

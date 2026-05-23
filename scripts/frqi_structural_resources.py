@@ -15,6 +15,8 @@ Rows include:
 After writing ``outputs/frqi_structural_metrics.csv``, plots
 ``outputs/fig_cx_vs_image_size.png`` and ``outputs/fig_depth_vs_image_size.png`` unless
 ``--no-plot`` is set. ``--plot-only`` reads an existing CSV and only emits figures.
+Optional ``--emit-layout-csv`` also writes ``outputs/frqi_structural_metrics_constrained.csv``
+(linear-chain ``GenericBackendV2`` matching each circuit width; same optimization level).
 """
 
 from __future__ import annotations
@@ -40,6 +42,7 @@ from src.improved import (  # noqa: E402
     build_frqi_prep_vchain,
     build_single_address_ry_slice,
 )
+from src.nisq_mock import make_generic_linear_backend  # noqa: E402
 from src.resources import transpiled_circuit_stats  # noqa: E402
 
 BASIS_GATES = ["cx", "rz", "sx"]
@@ -57,8 +60,12 @@ def _row(
     qc,
     notes: str = "",
     scale: int = 1,
+    backend=None,
+    coupling_map=None,
+    topology: str = "unconstrained",
+    mock_backend: str = "",
 ) -> dict:
-    stats = transpiled_circuit_stats(qc, BASIS_GATES, OPT_LEVEL)
+    stats = transpiled_circuit_stats(qc, BASIS_GATES, OPT_LEVEL, backend=backend, coupling_map=coupling_map)
     nq = int(stats["num_qubits"])
     return {
         "image": image,
@@ -67,6 +74,8 @@ def _row(
         "kind": kind,
         "notes": notes,
         "scale": scale,
+        "topology": topology,
+        "mock_backend": mock_backend,
         "basis_gates": ",".join(BASIS_GATES),
         "transpile_optimization_level": OPT_LEVEL,
         "num_qubits": nq,
@@ -186,6 +195,74 @@ def _emit_csv() -> Path:
     return path
 
 
+def _emit_constrained_layout_csv(*, backend_seed: int) -> Path:
+    """Transpile-only resource rows on a linear-chain ``GenericBackendV2`` matching circuit width."""
+    rows: list[dict] = []
+    for case in ("test_4x4", "test_8x8", "test_16x16"):
+        img = np.load(DATA / f"{case}.npy")
+        n = int(img.shape[0])
+        qc = build_frqi_prep_vchain(img)
+        be = make_generic_linear_backend(int(qc.num_qubits), seed=int(backend_seed))
+        rows.append(
+            _row(
+                image=case,
+                size=n,
+                kind="struct_vchain",
+                qc=qc,
+                notes="full prep + H on position (linear mock layout)",
+                backend=be,
+                topology="generic_linear_chain",
+                mock_backend=f"GenericBackendV2(seed={backend_seed})",
+            )
+        )
+
+    img4 = np.load(DATA / "test_4x4.npy")
+    qc4 = build_frqi_prep_naive(img4)
+    be4 = make_generic_linear_backend(int(qc4.num_qubits), seed=int(backend_seed))
+    rows.append(
+        _row(
+            image="test_4x4",
+            size=4,
+            kind="struct_naive_full",
+            qc=qc4,
+            notes="full naive prep (4×4 only) (linear mock layout)",
+            backend=be4,
+            topology="generic_linear_chain",
+            mock_backend=f"GenericBackendV2(seed={backend_seed})",
+        )
+    )
+
+    for n in (4, 8, 16):
+        m = required_position_qubits(n)
+        n_pix = 2**m
+        sl = build_single_address_ry_slice(m, 0, pi / 4.0, mode="noancilla")
+        be = make_generic_linear_backend(int(sl.num_qubits), seed=int(backend_seed))
+        base = _row(
+            image=f"test_{n}x{n}",
+            size=n,
+            kind="struct_naive_slice",
+            qc=sl,
+            notes="one address-0 slice, theta=pi/4 (linear mock layout)",
+            backend=be,
+            topology="generic_linear_chain",
+            mock_backend=f"GenericBackendV2(seed={backend_seed})",
+        )
+        rows.append(base)
+        scaled = dict(base)
+        scaled["kind"] = "struct_naive_slice_scaled"
+        scaled["notes"] = f"slice stats × N_pix={n_pix} (linear MCX scaling estimate; linear mock layout)"
+        scaled["scale"] = n_pix
+        for k in ("depth", "cx", "transpiled_gate_count", "single_qubit_gates"):
+            scaled[k] = int(base[k]) * n_pix
+        rows.append(scaled)
+
+    df = pd.DataFrame(rows)
+    path = OUT / "frqi_structural_metrics_constrained.csv"
+    df.to_csv(path, index=False)
+    print(f"Wrote {path}")
+    return path
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Structural FRQI transpiled metrics (CSV + plots).")
     ap.add_argument(
@@ -194,6 +271,17 @@ def main() -> None:
         help="Skip circuit transpilation; read outputs/frqi_structural_metrics.csv and plot only.",
     )
     ap.add_argument("--no-plot", action="store_true", help="Emit CSV only.")
+    ap.add_argument(
+        "--emit-layout-csv",
+        action="store_true",
+        help="Also write outputs/frqi_structural_metrics_constrained.csv (linear-chain GenericBackendV2 matching each circuit width).",
+    )
+    ap.add_argument(
+        "--layout-backend-seed",
+        type=int,
+        default=42,
+        help="Seed for GenericBackendV2 sampling when emitting the constrained layout CSV.",
+    )
     args = ap.parse_args()
 
     csv_path = OUT / "frqi_structural_metrics.csv"
@@ -205,6 +293,8 @@ def main() -> None:
         return
 
     _emit_csv()
+    if args.emit_layout_csv:
+        _emit_constrained_layout_csv(backend_seed=int(args.layout_backend_seed))
     if not args.no_plot:
         plot_structural_metrics_csv(csv_path, OUT)
 

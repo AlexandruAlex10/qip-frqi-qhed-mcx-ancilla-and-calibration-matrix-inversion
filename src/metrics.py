@@ -58,7 +58,7 @@ def ssim_uint8(a: np.ndarray, b: np.ndarray, *, data_range: float = 255.0) -> fl
 
 def ssim_like(a: np.ndarray, b: np.ndarray) -> float:
     """Lightweight similarity score in [-1, 1], not a full SSIM implementation.
-    Kept simple to avoid extra dependencies in Week 2.
+    Kept simple to avoid extra dependencies.
     """
     a = np.asarray(a, dtype=np.float64).ravel()
     b = np.asarray(b, dtype=np.float64).ravel()

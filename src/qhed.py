@@ -96,7 +96,7 @@ def baseline_qhed_edge_map(image: np.ndarray, low_frequency_block: int = 2) -> n
     coeffs = fwht2d(arr)
 
     # The low_frequency_block argument is kept for compatibility with the README and
-    # future experiments; the Week 2 baseline focuses on a stable non-degenerate output.
+    # future experiments; baseline focuses on a stable non-degenerate output.
     _ = int(low_frequency_block)
 
     contrast = np.abs(ifwht2d(np.abs(coeffs)))

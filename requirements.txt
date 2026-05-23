@@ -1,10 +1,11 @@
-qiskit>=1.0
-qiskit-aer>=0.14
+qiskit>=1.2,<1.4
+qiskit-aer>=0.14,<0.17
 numpy>=1.26
 scipy>=1.11
 matplotlib>=3.8
 scikit-image>=0.22
 pandas>=2.2
+PyYAML>=6.0
 tqdm>=4.66
 jupyterlab>=4.0
 pytest>=7.0

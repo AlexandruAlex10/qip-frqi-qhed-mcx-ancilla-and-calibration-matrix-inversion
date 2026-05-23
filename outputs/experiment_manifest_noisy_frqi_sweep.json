@@ -1,0 +1,50 @@
+{
+  "argv": [],
+  "experiment": {
+    "flags": {
+      "allow_heavy_dm": false,
+      "dm_max_qubits": 14
+    },
+    "outputs": {
+      "csv": "outputs/noisy_frqi_metrics.csv",
+      "figures_glob": "outputs/noisy_frqi_metrics_*_curves.png"
+    },
+    "seeds": {
+      "simulator": 42,
+      "transpile": null
+    },
+    "sweep": {
+      "images": [
+        "test_4x4",
+        "test_8x8",
+        "test_16x16"
+      ],
+      "methods": [
+        "naive",
+        "vchain"
+      ],
+      "mock_backend": "generic_linear",
+      "mock_backend_seed": 42,
+      "noise_mode": "synthetic",
+      "scales": [
+        0.0,
+        0.05,
+        0.1,
+        0.15,
+        0.2
+      ],
+      "topology": "full",
+      "transpile_optimization_level": 0,
+      "yaml_preset": ""
+    }
+  },
+  "generated_utc": "2026-05-23T20:12:47.561799+00:00",
+  "git_commit": "0db96e6ae7eeffbccbc65c86b3945af69188a501",
+  "python": "3.11.3",
+  "schema": "experiment_manifest_v1",
+  "script": "scripts/noisy_frqi_sweep.py",
+  "versions": {
+    "qiskit": "1.3.3",
+    "qiskit_aer": "0.16.4"
+  }
+}

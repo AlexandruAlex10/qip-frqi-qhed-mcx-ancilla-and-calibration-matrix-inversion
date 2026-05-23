@@ -58,4 +58,4 @@ Gate-level **QHED** (Hadamard / neighbor-conditioned operations on the color qub
 
 ## 4. Figures
 
-Toy vs v-chain slice and block-level FRQI prep: **`thesis/design/figures/`** (`toy_naive_vs_vchain.svg|pdf`, `block_frqi_prep.svg|pdf`). Generate PDFs and SVGs via **`scripts/week4_draw_diagrams.py`**.
+Toy vs v-chain slice and block-level FRQI prep: **`thesis/design/figures/`** (`toy_naive_vs_vchain.svg|pdf`, `block_frqi_prep.svg|pdf`). Generate PDFs and SVGs via **`scripts/toy_and_block_level_diagrams.py`**.

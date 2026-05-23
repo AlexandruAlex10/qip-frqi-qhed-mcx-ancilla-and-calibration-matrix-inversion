@@ -1,0 +1,7 @@
+name: strong
+description: Stronger synthetic depolarizing + noticeable symmetric readout confusion.
+noise:
+  p_depol_1q: 0.012
+  p_depol_2q: 0.06
+  readout_prob_01: 0.08
+  readout_prob_10: 0.08
