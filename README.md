@@ -46,6 +46,16 @@ pip install -r requirements.txt
 pytest
 ```
 
+## Thesis results ingestion
+
+The `outputs/` contract is documented in `thesis/outputs_registry.md` (see `thesis/results_bundle.yaml` for the loader). After you populate `outputs/` with CSVs and manifests, run:
+
+```powershell
+python scripts\build_results_tables.py
+```
+
+This validates required columns, warns when CSV timestamps disagree with linked `experiment_manifest_*.json` (use `--strict` to fail on those checks and on missing `expected_figures`), and writes Markdown/LaTeX fragments plus plots under `thesis/generated/` (gitignored). Use `--require-figures` if PNGs under `outputs/` must exist before building the thesis.
+
 
 ## Run demos
 

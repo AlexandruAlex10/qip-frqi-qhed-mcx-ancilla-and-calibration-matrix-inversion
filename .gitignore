@@ -303,6 +303,9 @@ TSWLatexianTemp*
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
 
+# thesis pipeline generated fragments (rebuild with scripts/build_results_tables.py)
+thesis/generated/
+
 # project implementation files
 __pycache__/
 *.pyc

@@ -1,15 +1,6 @@
 {
   "argv": [
-    "--noise-mode",
-    "synthetic",
-    "--topology",
-    "linear",
-    "--transpile-optimization-level",
-    "3",
-    "--mock-backend-seed",
-    "42",
-    "--seed",
-    "42"
+    "--mock-nisq-bundle"
   ],
   "experiment": {
     "flags": {
@@ -17,8 +8,8 @@
       "dm_max_qubits": 14
     },
     "outputs": {
-      "csv": "outputs/noisy_frqi_metrics.csv",
-      "figures_glob": "outputs/noisy_frqi_metrics_*_curves.png"
+      "csv": "outputs/noisy_frqi_metrics_mock_nisq_bundle.csv",
+      "figures_glob": "outputs/noisy_frqi_metrics_mock_nisq_bundle_*_curves.png"
     },
     "seeds": {
       "simulator": 42,
@@ -36,20 +27,16 @@
       ],
       "mock_backend": "generic_linear",
       "mock_backend_seed": 42,
-      "noise_mode": "synthetic",
+      "noise_mode": "from_backend",
       "scales": [
-        0.0,
-        0.05,
-        0.1,
-        0.15,
-        0.2
+        1.0
       ],
-      "topology": "linear",
+      "topology": "full",
       "transpile_optimization_level": 3,
       "yaml_preset": ""
     }
   },
-  "generated_utc": "2026-05-27T18:11:14.275468+00:00",
+  "generated_utc": "2026-05-27T18:22:44.779047+00:00",
   "git_commit": "9601c233c3c035ed77814bd7f5571f1e3f9232dc",
   "python": "3.11.3",
   "schema": "experiment_manifest_v1",

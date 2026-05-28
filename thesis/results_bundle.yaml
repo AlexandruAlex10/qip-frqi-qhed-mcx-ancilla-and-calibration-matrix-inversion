@@ -1,0 +1,119 @@
+# Machine-readable outputs contract + ingestion routing.
+# Human-readable mirror: thesis/outputs_registry.md
+# Frozen provenance excerpts (refresh after runs): thesis/results_configuration.md
+# Edit `primary` paths when you freeze a different experiment CSV/manifest pair.
+
+version: 1
+
+paths:
+  outputs_dir: outputs
+
+primary:
+  frqi_qhed_sobel_metrics:
+    csv: frqi_qhed_sobel_metrics.csv
+    manifest: null
+    required_columns:
+      - image
+      - size
+      - frqi_qubits
+      - frqi_depth_transpiled
+      - frqi_cx_transpiled
+      - frqi_ssim_skimage
+      - qhed_vs_sobel_ssim_skimage
+      - transpile_optimization_level
+    thesis_subsection: "Encoding baseline; ideal FRQI/QHED vs Sobel; transpiled initialize reference"
+
+  frqi_structural_metrics:
+    csv: frqi_structural_metrics.csv
+    manifest: null
+    required_columns:
+      - image
+      - image_size
+      - m
+      - kind
+      - num_qubits
+      - depth
+      - cx
+      - topology
+      - transpile_optimization_level
+    thesis_subsection: "Structural resources — naive vs v-chain ancilla pattern"
+
+  noisy_recon_qhed_edges:
+    csv: noisy_recon_qhed_edges.csv
+    manifest: experiment_manifest_noisy_recon_qhed_edges.json
+    required_columns:
+      - image
+      - method
+      - noise_mode
+      - noise_scale
+      - topology
+      - edge_psnr
+      - edge_ssim
+      - psnr
+      - ssim
+      - fidelity
+      - m
+      - total_qubits
+    thesis_subsection: "Noisy simulator — reconstruction + edge metrics (paired naive vs vchain)"
+
+  readout_mitigation_shot_sweep:
+    csv: readout_mitigation_shot_sweep.csv
+    manifest: experiment_manifest_readout_mitigation_shot_sweep.json
+    required_columns:
+      - image
+      - seed
+      - p1_raw
+      - p1_mitigated
+      - shots_cal
+      - shots_data
+    thesis_subsection: "Readout mitigation — calibration matrix inversion"
+
+  noisy_frqi_metrics:
+    csv: noisy_frqi_metrics.csv
+    manifest: experiment_manifest_noisy_frqi_sweep.json
+    required_columns:
+      - image
+      - method
+      - noise_mode
+      - noise_scale
+      - fidelity
+      - psnr
+      - ssim
+      - m
+      - total_qubits
+    thesis_subsection: "Optional — noisy FRQI sweep (PSNR/SSIM/fidelity vs noise)"
+
+supplementary:
+  frqi_structural_metrics_constrained:
+    csv: frqi_structural_metrics_constrained.csv
+    manifest: null
+    required_columns:
+      - image
+      - kind
+      - num_qubits
+      - depth
+      - cx
+    optional: true
+    thesis_subsection: "Structural resources — layout-constrained variant"
+
+  noisy_recon_qhed_edges_mock_nisq:
+    csv: noisy_recon_qhed_edges_mock_nisq.csv
+    manifest: experiment_manifest_noisy_recon_mock_nisq.json
+    required_columns:
+      - image
+      - method
+      - noise_mode
+      - noise_scale
+      - edge_psnr
+      - edge_ssim
+      - psnr
+      - ssim
+      - fidelity
+    optional: true
+    thesis_subsection: "Supplementary — mock NISQ snapshot (from_backend noise model)"
+
+# Figures expected after running the scripts in README / Week 9 runbook (existence checked; optional --require-figures to fail if missing).
+expected_figures:
+  - outputs/fig_cx_vs_image_size.png
+  - outputs/fig_depth_vs_image_size.png
+  - outputs/readout_mitigation_shot_sweep.png

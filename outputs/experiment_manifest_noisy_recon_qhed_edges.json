@@ -1,5 +1,16 @@
 {
-  "argv": [],
+  "argv": [
+    "--noise-mode",
+    "synthetic",
+    "--topology",
+    "linear",
+    "--transpile-optimization-level",
+    "3",
+    "--mock-backend-seed",
+    "42",
+    "--seed",
+    "42"
+  ],
   "experiment": {
     "outputs": {
       "csv": "outputs/noisy_recon_qhed_edges.csv"
@@ -28,13 +39,13 @@
         0.15,
         0.2
       ],
-      "topology": "full",
-      "transpile_optimization_level": 0,
+      "topology": "linear",
+      "transpile_optimization_level": 3,
       "yaml_preset": ""
     }
   },
-  "generated_utc": "2026-05-23T21:40:05.499867+00:00",
-  "git_commit": "0db96e6ae7eeffbccbc65c86b3945af69188a501",
+  "generated_utc": "2026-05-26T22:21:19.634913+00:00",
+  "git_commit": "9601c233c3c035ed77814bd7f5571f1e3f9232dc",
   "python": "3.11.3",
   "schema": "experiment_manifest_v1",
   "script": "scripts/noisy_recon_qhed_edge_metrics.py",
