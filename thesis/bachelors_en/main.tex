@@ -8,24 +8,20 @@
 \usepackage{titlesec}
 \usepackage{enumitem}
 \usepackage{multirow}
+\usepackage{booktabs}
 \usepackage{listings}
-\usepackage{csquotes}
 \usepackage{xcolor}
-\usepackage{xurl}
+\usepackage{url}
 \usepackage{hyperref}
 \usepackage{float}
 \usepackage{caption}
 \usepackage{pdfpages}
-\usepackage{nimbusmono}
-\usepackage{nimbussans}
+\usepackage{lmodern}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{cleveref}
 
-
-%generates filler text
-\usepackage{lipsum}
 
 \usepackage[style=ieee,backend=bibtex,sorting=none]{biblatex}
 
@@ -46,14 +42,12 @@
 \begingroup
 	\let\clearpage\relax
 	\listoftables
-	\vspace{24pt}
-	\listof{code}{List of Snippets}
 \endgroup
 \include{chapters/4-Introduction}
-\include{chapters/5-Body}
-\include{chapters/6-Conclusions}
+\include{chapters/5-RelatedWork}
+\include{chapters/6-Body}
+\include{chapters/7-Conclusions}
 
-% Look for building the .bib file on Overleaf documentation
 \printbibliography[heading=bibnumbered]
 
 \includepdf[pages={1}]{\declarationPath}

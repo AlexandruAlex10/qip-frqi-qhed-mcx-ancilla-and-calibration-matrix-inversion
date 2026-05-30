@@ -46,6 +46,21 @@ pip install -r requirements.txt
 pytest
 ```
 
+## Thesis (LaTeX)
+
+The UPT English template lives under `thesis/bachelors_en/`. Chapters: **Introduction** (`chapters/4-Introduction.tex`), **State of the art** (`chapters/5-RelatedWork.tex`), **Methods, experiments, and results** (`chapters/6-Body.tex`), **Conclusions** (`chapters/7-Conclusions.tex`), plus abstracts and `customs.tex`. Stable result tables for `\input` are in `thesis/bachelors_en/generated/results_tables.tex` (sync with `thesis/generated/` after `build_results_tables.py` if numbers change).
+
+From `thesis/bachelors_en/`, build with MiKTeX or TeX Live:
+
+```powershell
+pdflatex -interaction=nonstopmode main.tex
+bibtex main
+pdflatex -interaction=nonstopmode main.tex
+pdflatex -interaction=nonstopmode main.tex
+```
+
+`main.tex` uses **Latin Modern** instead of the template Nimbus fonts for portable installs, and **hyperref** is commented out when a minimal MiKTeX lacks its dependency tree; re-enable `\usepackage{hyperref}` and `\usepackage{csquotes}` locally for PDF links and full babel/biblatex integration.
+
 ## Thesis results ingestion
 
 The `outputs/` contract is documented in `thesis/outputs_registry.md` (see `thesis/results_bundle.yaml` for the loader). After you populate `outputs/` with CSVs and manifests, run:

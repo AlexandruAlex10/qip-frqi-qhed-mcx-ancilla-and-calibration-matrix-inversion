@@ -1,52 +1,26 @@
-\chapter{Introduction}\label{section:introduction}
+\chapter{Introduction}\label{ch:introduction}
 \thispagestyle{pagestyle}
 
+\section{Motivation}
+Quantum computing is moving from proof-of-principle algorithms toward applications in signal and image processing~\cite{Ruan2021OpportunitiesChallenges,Wang2022ReviewQIP,Farooq2025SystematicReview}. Quantum image representations encode pixel data in amplitudes or basis states of a small register, enabling quantum versions of filtering, segmentation, and edge detection~\cite{Le2011FRQI,Yao2017QHED}. On current noisy intermediate-scale quantum (NISQ) hardware, however, circuit depth, two-qubit gate count, and readout errors dominate feasibility long before asymptotic speedups matter~\cite{Geng2022HybridNISQEdge,Geng2023ImprovedFRQI}.
 
-\section{\LaTeX\ Instructions}
-\subsection{Structure} \label{section:structure}
-Each file belonging to the document can be found in \texttt{bachelors\_en/}.
-The main file of the template is \texttt{main.tex}, which must be compiled using pdflatex (usually the default option). Files in \texttt{components/} define the template and \textbf{should not be modified}.
+This thesis studies a concrete pipeline: \emph{flexible representation of quantum images} (FRQI) encoding~\cite{Le2011FRQI} followed by the quantum Hadamard edge detector (QHED) baseline~\cite{Yao2017QHED,QiskitTextbookQuantumEdgeDetection}. The scientific question is not a new edge operator, but whether a \textbf{structurally cheaper FRQI state-preparation circuit}---obtained by changing multi-controlled-$X$ synthesis---changes transpiled resources and robustness under noise compared with a textbook naive decomposition.
 
-In \texttt{customs.tex} reside the personal data which appear in places not directly accessible by the user and should be modified. Every file in \texttt{chapters/} represents a chapter where the content of the thesis is written. Under \texttt{images/} will be placed all the images used in the document.
+\section{Baseline and research gap}
+FRQI stores each grayscale intensity in a rotation angle on a dedicated color qubit, while a position register of $m = 2\log_2 N$ qubits addresses an $N\times N$ image~\cite{Le2011FRQI,Iliyasu2013FRQIroadmap}. Implementations that loop over pixels and apply multi-controlled rotations naively inherit worst-case multi-controlled gate costs; recent synthesis literature shows that ancilla-assisted decompositions can reduce CX depth for multi-controlled targets~\cite{Vale2023MCSU2,Azevedo2024LowDepthMCG,Arsoski2024MCXQFT,Zindorf2024EfficientMCG}. Separately, readout errors on the color qubit bias estimated intensities; calibration-matrix inversion is a standard mitigation primitive on superconducting backends, and we include a controlled simulator slice to illustrate the workflow~\cite{Mu2025GuidedImageFiltering}.
 
-\subsection{Authenticity Declaration}
-The blank declaration can be obtained in two ways:
-\begin{itemize}
-	\item from \texttt{main.tex} residing in \texttt{authenticity\_declaration/}, an unsigned variant is created after filling personal data in \texttt{customs.tex}, similarly with the structure of \cref{section:structure}.
-	\item from the document at \url{https://ac.upt.ro/finalizare-studii/}, in section \enquote{Documente importante}. This should be manually filled with personal data.
-\end{itemize}
-Regardless of the option chosen, the document must be printed, \textbf{physically signed(with a pen)} and scanned in order to be attached. In \texttt{customs.tex}, the path must be changed from the example to the signed and scanned PDF document, which will be saved in \texttt{bachelors\_ro/}.
+Prior quantum edge-detection work often assumes ideal state preparation or focuses on NEQR-based Sobel variants~\cite{Zhang2013NEQR,Zhang2015QSobel,Fan2019SobelNEQR,Chetia2021ImprovedSobelNEQR}. Few studies pair \textbf{paired} naive versus ancilla-assisted FRQI preparation under identical noise grids while holding the downstream QHED stage fixed.
 
-\subsection{Other \LaTeX\ elements}
-References to other elements in the document (excepting citations and links): \cref{section:introduction}; \cref{fig:myfig}.
-
-For each reference, a \texttt{\textbackslash label} is needed, which will be inserted anywhere in the text or immediatley after chapter/section titles, and in figures/tables/code fragments.
-\\[\baselineskip]
-
-Citations will be added using bibtex, example: \cref{example:citation}.
-Inserting images (\cref{fig:myfig}), tables (\cref{table:table1}) and code fragments (\cref{code:polym}) will be added using the corresponding code. For tables, an external formatting tool is recommended: (example \cref{example:table_url}).
-
-\section{General Information}
-
-Each chapter must have a clear structure, will begin on a new page and will have a title. It will be followed by two blank 12 pt. lines.
-
-Each sub-section title (e.g. 1.2 General information) shall begin after a 12 points blank line after the text and shall be followed by a 12 points blank line.
-
-The text of the paper will be justified. It is recommended to check the spelling of the text with the help of the speller of the Word program. It is recommended that the thesis paper should not exceed a number of 100 pages, annexes included.
-
-
-Rules applying to the text of the paper:
-\begin{enumerate}[leftmargin=2cm,topsep=1.15pt,itemsep=1.15pt,partopsep=1.15pt,parsep=1.15pt,label=\alph*.]
-   \item Margins of the page – the following values will be used:
-   \begin{itemize}[topsep=1.15pt,itemsep=1.15pt,partopsep=1.15pt,parsep=1.15pt]
-     \item interior: 2 cm 
-     \item exterior: 2 cm 
-     \item up: 2,5 cm (header included)
-     \item down: 2 cm
-   \end{itemize}
-   \item Line spacing – the text shall apply a 1.15 line spacing 
-   \item Indentation – text within regular paragraphs will be aligned between the left and the right margins (justified). The first line of each paragraph will have a 1.5 cm indentation. There will be an exception for chapter titles, which will be aligned left, just like the titles of the tables and of the figures (see explanations below);
-   \item Font – the 12 points Nimbus Sans font will be used, as well as the specific diacritics of the paper language (ex: ă, ş, ţ, î, â - for the Romanian language);
-   \item Page numbering -  Page numbering runs from the title page to the last page of the paper, but the page number appears starts on the Introduction page. The page number is inserted at the bottom of the page, centered.
-   \item f.	Page header – it shall be inserted starting with the introduction page and contains, in successive lines, the following text, aligned left and with the size of 8 points: (i) the text Politehnica University of Timișoara ; (ii) the name of the program of study and the year of the paper defense; (iii) the name of the candidate (left) and the title of the paper. At the right of the header, the UPT logo may be inserted; 
+\section{Contributions}
+This dissertation makes three contributions, all supported by reproducible scripts and CSV manifests in the project repository:
+\begin{enumerate}
+  \item A \textbf{structural comparison} of naive (\texttt{noancilla}) versus v-chain (\texttt{v-chain}) multi-controlled FRQI preparation, including transpiled qubit count, depth, and CX for $4\times 4$, $8\times 8$, and $16\times 16$ test images, with honest scaling estimates where full naive transpilation is infeasible.
+  \item A \textbf{noisy-simulator robustness study} that reconstructs FRQI states under depolarizing noise, applies QHED, and reports PSNR, SSIM, fidelity, and edge-map metrics for naive and v-chain layouts on matched noise grids.
+  \item A \textbf{readout mitigation proof-of-concept} that estimates a $2\times 2$ confusion matrix for the color qubit, inverts it with regularization, and compares raw versus mitigated $p_1$ statistics across random seeds on a $4\times 4$ slice.
 \end{enumerate}
+
+\section{Scope and limitations}
+All experiments in this submission use \textbf{simulators only} (Qiskit Aer statevector or density-matrix backends, plus optional mock NISQ noise wrappers). No IBM Quantum hardware runs are included. Image sizes are limited to $4\times 4$, $8\times 8$, and $16\times 16$ grayscale test patterns. Density-matrix simulation of the full $16\times 16$ v-chain register (16~qubits) is often skipped to respect memory limits; the Results chapter states where v-chain rows are missing. Statistical tests on paired naive--v-chain differences are reported as \textbf{exploratory} and should not be read as definitive superiority claims.
+
+\section{Thesis outline}
+\Cref{ch:related} surveys quantum image representations, edge-detection literature, NISQ constraints, multi-controlled synthesis, and mitigation. \Cref{ch:methods} describes methods, experimental setup, and results. \Cref{ch:conclusions} summarizes contributions, limitations, and future work including hardware validation and zero-noise extrapolation.

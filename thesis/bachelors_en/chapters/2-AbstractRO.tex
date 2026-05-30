@@ -8,6 +8,10 @@
 
 \vspace{24pt}
 
-The abstract is intended to inform about the content of the paper through a brief description of the research of up to one page, the procedures/methods, as well as its results or conclusions. The abstract in Romanian becomes mandatory for works edited in languages other than Romanian and will be written in 12 pt Nimbus Sans fonts. It will start two blank lines after the heading "ABSTRACT". Before the title, there will be three blank 12 pt. lines.
+Procesarea imaginilor cuantică promite accelerări pentru filtrare și detecție de muchii, însă dispozitivele din era NISQ impun circuite superficiale, cu număr redus de qubiți și zgomot semnificativ. Reprezentarea FRQI (Flexible Representation of Quantum Images) codifică intensitățile pixelilor în unghiuri de rotație controlate de adrese multi-controlate; pregătirea naivă a acestor rotații folosind multi-controlled $X$ fără ancile duce la adâncimi și număr mare de porți CX după transpilare.
+
+Lucrarea compară pregătirea structurală FRQI cu decompoziție \emph{no-ancilla} față de varianta \emph{v-chain} cu ancile reutilizabile, pe imagini de test $4\times 4$, $8\times 8$ și $16\times 16$, în simulator Qiskit Aer. Se raportează resurse transpilate (qubiți, adâncime, CX), reconstrucții FRQI sub zgomot depolarizant sintetic, metrici de muchii QHED față de Sobel clasic și un studiu de concept pentru mitigare de readout prin inversarea matricei de confuzie a qubitului de culoare.
+
+La $16\times 16$, pregătirea v-chain atinge 11\,663 porți CX transpilate, față de o estimare liniară de 114\,176 CX pentru decompoziția naivă scalată dintr-o felie reprezentativă; FRQI ideal reconstruiește perfect imaginile (SSIM $=1$), iar similaritatea QHED--Sobel scade la rezoluții mari (SSIM $\approx 0{,}16$ la $8\times 8$, $\approx 0{,}01$ la $16\times 16$). Compararea pereche naive--v-chain sub zgomot pentru \texttt{edge\_ssim} este exploratorie (Wilcoxon $p\approx 0{,}078$); mitigarea readout pe $4\times 4$ arată o deplasare medie a $p_1$ cu $p\approx 0{,}002$. Rezultatele sunt exclusiv pe simulator; rândurile v-chain la $16\times 16$ în unele experimente lipsesc din cauza costului matricii de densitate.
 
 \vfill

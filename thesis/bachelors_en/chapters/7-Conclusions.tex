@@ -1,0 +1,20 @@
+\chapter{Conclusions}\label{ch:conclusions}
+\thispagestyle{pagestyle}
+
+\section{Summary of contributions}
+This thesis examined NISQ-oriented structural optimization of FRQI state preparation for a fixed QHED edge-detection downstream stage. The work is entirely \textbf{simulator-based}, using open Python tooling and versioned CSV manifests.
+
+\textbf{Structural resources.} Replacing naive \texttt{noancilla} multi-controlled $X$ decompositions with a v-chain ancilla pattern reduces transpiled CX dramatically at larger images: at $16\times 16$, v-chain reports 11\,663~CX versus a scaled naive estimate of 114\,176~CX, with higher qubit width (16 vs 10). At $4\times 4$, full naive transpilation (1160~CX) still exceeds v-chain (331~CX) on fewer total qubits. These numbers quantify preparation cost---often the bottleneck named in FRQI hardware studies~\cite{Geng2023ImprovedFRQI}---without assuming a new image representation.
+
+\textbf{Ideal and noisy image quality.} Ideal FRQI reconstruction achieves SSIM $=1$ for all test sizes. QHED diverges from classical Sobel as resolution grows (QHED--Sobel SSIM $\approx 0.16$ at $8\times 8$, $\approx 0.01$ at $16\times 16$), consistent with prior QHED literature~\cite{Yao2017QHED}. Under depolarizing noise, paired naive--v-chain edge SSIM differences are \textbf{inconclusive} overall (Wilcoxon $p \approx 0.078$, median $\Delta < 0$). Lower CX depth does not automatically translate into better edge maps at every noise scale.
+
+\textbf{Readout mitigation.} A $4\times 4$ calibration-matrix inversion demo shifts mean $p_1$ by $\approx -0.015$ with paired $p \approx 0.002$ across ten seeds, illustrating how readout bias on the color qubit could be corrected before intensity decoding.
+
+\section{Practical implications}
+For quantum image pipelines on near-term devices, synthesis choices for multi-controlled preparation matter as much as the abstract FRQI model~\cite{Le2011FRQI,Vale2023MCSU2,Azevedo2024LowDepthMCG}. Practitioners should budget ancillas and report transpiled CX/depth alongside fidelity metrics. Edge operators such as QHED should be validated against classical references per resolution~\cite{QiskitTextbookQuantumEdgeDetection}. Mitigation should be planned at the readout layer when intensities are inferred from measurement statistics~\cite{Mu2025GuidedImageFiltering}.
+
+\section{Limitations}
+No hardware experiments were performed. Image sizes are tiny by classical standards. Scaled naive baselines extrapolate from one transpiled slice and may not capture global optimizations a full circuit could admit. $16\times 16$ v-chain noisy and edge results are frequently absent. Exploratory Wilcoxon tests use only eight paired noise cells for edge metrics.
+
+\section{Future work}
+Promising extensions include: (i)~IBM Quantum shots on the smallest circuits with layout-aware transpilation; (ii)~completing $16\times 16$ v-chain density-matrix runs via circuit cutting or reduced noise grids; (iii)~zero-noise extrapolation and richer mitigation stacks beyond $2\times 2$ readout inversion; (iv)~comparing additional \texttt{MCXGate} modes from recent synthesis papers~\cite{Arsoski2024MCXQFT,Zindorf2024EfficientMCG}; and (v)~hybrid edge schemes that keep shallow quantum layers~\cite{Geng2022HybridNISQEdge,Shubha2024EdgeDetectionQuantumized} while adopting cheaper FRQI preparation.
