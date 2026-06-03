@@ -1,20 +1,175 @@
-\chapter{State of the art}\label{ch:related}
+\chapter{State of the art and theoretical background}\label{ch:related}
 \thispagestyle{pagestyle}
 
+\section{Quantum computing preliminaries}
+This section fixes notation and gives a compact background for readers who are not specialists in quantum information, before discussing about quantum image representations and the literature closest to this thesis~\cite{NielsenChuang2010,Ruan2021OpportunitiesChallenges,Wang2022ReviewQIP}.
+
+\subsection{Classical bits versus quantum states}
+A classical bit takes values $0$ or $1$. A \emph{qubit} is described by a unit vector in a two-dimensional complex Hilbert space; writing the computational basis as $\{\ket{0},\ket{1}\}$, a pure state is
+\begin{equation}
+\ket{\psi} = \alpha\ket{0} + \beta\ket{1}, \qquad |\alpha|^2 + |\beta|^2 = 1 .
+\end{equation}
+The squared magnitudes $|\alpha|^2$ and $|\beta|^2$ are the probabilities of outcomes $0$ and $1$ when the qubit is measured in the computational basis. For $n$ qubits, pure states live in a $2^n$-dimensional space spanned by tensor products $\ket{x_{n-1}}\cdots\ket{x_0}$ with $x_i\in\{0,1\}$. \emph{Superposition} lets algorithms explore many basis configurations in one state vector, but \emph{measurement} collapses that information to a classical sample unless interference is engineered carefully~\cite{NielsenChuang2010}.
+
+\subsection{Unitary evolution, gates, and circuits}
+Closed-system evolution between measurements is \emph{unitary}: a state $\ket{\psi}$ becomes $U\ket{\psi}$ for some unitary $U$. Common single-qubit gates used in this thesis include the Pauli-$X$ bit-flip, the Hadamard $H$ that creates uniform superpositions, and $y$-rotations $R_y(\theta)=\exp(-\mathrm{i}\theta Y/2)$ used to encode grayscale angles in FRQI. Two-qubit entangling gates such as CNOT (CX) are the main resource bottleneck on superconducting platforms because they are slower and noisier than single-qubit microwave pulses~\cite{Geng2023ImprovedFRQI}.
+
+A \emph{quantum circuit} is a directed acyclic diagram of gates acting on named qubits; depth counts time steps when gates are parallelized, while CX count measures two-qubit cost after decomposition to a native basis. \emph{Universality} means that a discrete gate set can approximate any unitary to arbitrary precision; practical compilers therefore \emph{transpile} logical circuits into basis gates (such as \texttt{cx}, \texttt{rz}, \texttt{sx} in this thesis) and optimize depth~\cite{NielsenChuang2010}.
+
+\subsection{Deferred measurement and end-of-circuit readout}
+The \emph{principle of deferred measurement} states that intermediate measurements in many textbook algorithms can be replaced by unitary entanglement with an ancilla workspace, then measured only at the end, without changing outcome statistics for observables of interest~\cite{NielsenChuang2010}. This is useful conceptually because it separates coherent evolution from classical information extraction. In near-term practice, however, algorithms still terminate in computational-basis readout: every application metric in this thesis is ultimately computed from classical bit strings (or, in density-matrix mode, from the pre-measurement state that \emph{would} yield those statistics).
+
+For FRQI pipelines, the color qubit carries grayscale information in amplitudes; when discussing about confusion-matrix mitigation, only the \emph{classical} channel that maps the ideal computational outcomes to reported bits is being changed, core QHED remains the same~\cite{Mu2025GuidedImageFiltering}. Keeping that distinction explicit avoids conflating gate noise (modeled as CPTP maps on $\rho$) with readout assignment error (modeled as a stochastic matrix on outcome probabilities).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[scale=1.0, every node/.style={font=\small}]
+  \node[left] at (-0.3,1.5) {control};
+  \node[left] at (-0.3,0.5) {target};
+  \draw[thick] (0,1.5) -- (2.2,1.5);
+  \draw[thick] (0,0.5) -- (0.85,0.5);
+  \draw[thick] (1.35,0.5) -- (2.2,0.5);
+  \filldraw (1.1,1.5) circle (3pt);
+  \draw[thick] (1.1,1.5) -- (1.1,0.5);
+  \draw[thick] (1.1,0.5) circle (0.25);
+  \draw[thick] (0.85,0.5) -- (1.35,0.5);
+  \draw[thick] (1.1,0.25) -- (1.1,0.75);
+  \node[right] at (2.4,1.0) {$\mathrm{CNOT}$ (CX)};
+\end{tikzpicture}
+\caption{Symbolic CNOT gate: the filled circle marks the control qubit; the segment on the lower wire denotes $X$ on the target conditioned on control $\ket{1}$.}
+\label{fig:tikz-cnot}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=2pt, minimum width=3.4cm, minimum height=0.9cm, align=center, font=\small},
+  arr/.style={-{Latex[length=2.2mm]}, thick}
+]
+  \node[box] (pos) {Position register\\$m$ qubits (addresses)};
+  \node[box, below=1.1cm of pos] (col) {Color qubit\\$R_y(\theta_p)$ when $\ket{p}$ matches};
+  \node[box, below=1.1cm of col] (meas) {Measurement / decoding\\intensities from $c$};
+  \draw[arr] (pos) -- node[midway, right=1mm, font=\scriptsize, align=left] {multi-controlled\\steering} (col);
+  \draw[arr] (col) -- node[midway, right=1mm, font=\scriptsize, align=left] {shots /\\density matrix} (meas);
+\end{tikzpicture}
+\caption{Conceptual FRQI data flow: addresses live in the position register; each pixel angle is applied conditional on address comparisons; classical readout reconstructs an image.}
+\label{fig:frqi-flow}
+\end{figure}
+
+\subsection{The NISQ setting}
+\emph{Noisy intermediate-scale quantum} (NISQ) devices have tens to hundreds of imperfect qubits, limited connectivity, finite coherence times ($T_1$, $T_2$), calibration drift, and readout errors~\cite{Preskill2018NISQ,Geng2022HybridNISQEdge}. For quantum image processing this matters twice: first, preparing data-dependent states such as FRQI already requires many multi-controlled operations; second, any downstream operator (here QHED) assumes the encoded state is close to the ideal one. Surveys emphasize that near-term progress depends on matching algorithms to realistic constraints rather than only on asymptotic complexity~\cite{Ruan2021OpportunitiesChallenges,Farooq2025SystematicReview}.
+
+\subsection{Noise models and simulation cost}
+Markovian gate noise at a high level using depolarizing channels on single- and two-qubit gates was modeled, compatible with Qiskit Aer density-matrix simulation. A depolarizing channel with probability $p$ replaces a state with the maximally mixed state on that subsystem with probability $p$, leaving it unchanged otherwise; composition of many noisy gates reduces coherences and mixed-state purity. \emph{Statevector} simulation stores $2^n$ complex amplitudes; \emph{density-matrix} simulation stores $4^n$ real parameters, which becomes prohibitive for $n\approx 16$ on commodity hardware---exactly the regime where $16\times16$ v-chain circuits may be skipped unless heavy-memory flags are enabled~\cite{NielsenChuang2010}.
+
+More general completely positive trace-preserving maps admit Kraus operator sums; depolarizing models are a convenient first pass because they are specified by few parameters and integrate cleanly with Qiskit~\cite{NielsenChuang2010}. Non-Markovian effects (temporal drift, $1/f$ flux noise) can dominate on real hardware but are outside simulator configuration in this case.
+
+\subsection{Readout and classical post-processing}
+Measurement hardware mis-classifies $\ket{0}$ versus $\ket{1}$ with small error rates. Empirically, a $2\times 2$ \emph{confusion matrix} $A$ maps true outcome probabilities $\mathbf{p}$ to observed frequencies $\mathbf{p}' \approx A\mathbf{p}$; \emph{mitigation} applies a stabilized inverse $A^{-1}$ (or pseudo-inverse) to recover an estimate of $\mathbf{p}$ from finite shots~\cite{Mu2025GuidedImageFiltering}. In FRQI, the color qubit carries grayscale information; biased readout therefore distorts reconstructed intensities even when the pre-measurement state was accurate.
+
+When $A$ is near-singular, Tikhonov regularization $(A^\top A + \lambda I)^{-1}A^\top$ trades bias for variance; this thesis implementation follows the repository design note and uses conservative regularization for the demonstration slice~\cite{Mu2025GuidedImageFiltering}.
+
+\subsection{Bridge to this thesis}
+The remainder of this chapter reviews quantum image formats and edge-detection variants, then positions the contribution of this work: QHED is kept fixed and studies are being done on how \textbf{FRQI preparation structure} (naive versus v-chain multi-controlled synthesis) affects transpiled resources and noisy-simulator metrics, plus a readout calibration slice on the color qubit.
+
 \section{Quantum image representations}
-The flexible representation of quantum images (FRQI) encodes normalized intensities as rotation angles on a color qubit conditioned on a position register~\cite{Le2011FRQI}. NEQR and related models store intensities in basis states of additional qubits, trading higher qubit width for simpler angle addressing~\cite{Zhang2013NEQR,Yan2014QImageRepresentation}. Surveys and trend papers compare representations by qubit efficiency, preparation cost, and compatibility with arithmetic circuits~\cite{Su2020NewTrend,Amankwah2022QPIXL,Das2023HybridQuditRGB,Dutta2021QuantumMechanicsBased,Ruan2021OpportunitiesChallenges,Wang2022ReviewQIP,EbrahimpourKomleh2024QuantumComputingImageProcessing,Farooq2025SystematicReview}. Roadmap articles emphasize that preparation---not the abstract representation---often dominates resource budgets on NISQ devices~\cite{Iliyasu2013FRQIroadmap,Geng2023ImprovedFRQI}.
+\subsection{FRQI and angle encoding}
+The flexible representation of quantum images (FRQI) stores a normalized pixel intensity in a rotation angle on a dedicated \emph{color} qubit, while a \emph{position} register of $m=2\log_2 N$ qubits indexes an $N\times N$ image~\cite{Le2011FRQI}. Conceptually, one prepares a superposition over all pixel addresses and rotates the color qubit by an address-dependent angle. The representation is qubit-efficient in the sense of using $m+1$ qubits for $2^m$ pixels, but the preparation circuit can still be deep because each pixel update may require multi-controlled rotations~\cite{Iliyasu2013FRQIroadmap}.
 
-\section{Quantum edge detection}
-Yao \textit{et al.} introduced QHED on FRQI-encoded images and demonstrated the pipeline experimentally~\cite{Yao2017QHED}. The Qiskit textbook notebook provides a pedagogical FRQI+QHED reference implementation~\cite{QiskitTextbookQuantumEdgeDetection}. Parallel lines of work adapt classical Sobel, Prewitt, and Kirsch masks to NEQR and related encodings~\cite{Zhang2015QSobel,Fan2019SobelNEQR,Zhou2019PrewittNEQR,Xu2020Kirsch,Chetia2021ImprovedSobelNEQR,Liu2022EightDirectionSobelNEQR}. Hybrid and fully quantumized edge proposals target NISQ constraints explicitly~\cite{Geng2022HybridNISQEdge,Shubha2024EdgeDetectionQuantumized}. Image-filtering primitives such as guided filtering have also been ported to quantum circuits~\cite{Mu2025GuidedImageFiltering}. This thesis keeps the \textbf{QHED operator fixed} and varies only FRQI preparation structure.
+\subsection{NEQR and related encodings}
+The novel enhanced quantum representation (NEQR) encodes pixel values in basis states of additional qubits rather than only in continuous angles~\cite{Zhang2013NEQR}. Related qubit-efficient encodings and quantum image models are discussed by Yan~\cite{Yan2014QImageRepresentation}. Trade-offs are documented across surveys: NEQR-type schemes can simplify some arithmetic image operations at the cost of more qubits; FRQI keeps intensity in a single qubit but pays in controlled rotations~\cite{Su2020NewTrend,Amankwah2022QPIXL,Das2023HybridQuditRGB}. Hybrid qudit proposals and quantum signal-processing viewpoints further broaden the design space~\cite{Dutta2021QuantumMechanicsBased,EbrahimpourKomleh2024QuantumComputingImageProcessing}.
 
-\section{NISQ challenges}
-NISQ devices exhibit limited coherence time, gate infidelity, and readout bias. Hybrid edge detectors combine shallow quantum layers with classical post-processing to remain executable today~\cite{Geng2022HybridNISQEdge}. Improved FRQI studies on superconducting processors document layout and readout bottlenecks even when logical circuits are small~\cite{Geng2023ImprovedFRQI}. Our experimental design therefore reports transpiled CX/depth, depolarizing-noise sweeps, and an isolated readout-mitigation slice rather than claiming device-ready advantage factors.
+\begin{table}[htbp]
+\centering
+\caption{Qualitative comparison of image encodings (after~\cite{Le2011FRQI,Zhang2013NEQR,Wang2022ReviewQIP}). Survey-level roadmaps consistently highlight state preparation, not only operator design, as the dominant engineering bottleneck~\cite{Farooq2025SystematicReview,Ruan2021OpportunitiesChallenges}.}
+\label{tab:repr-compare}
+\begin{tabular}{p{2.2cm}p{3.8cm}p{3.8cm}p{3.8cm}}
+\toprule
+Aspect & FRQI & NEQR (family) & Notes for NISQ \\
+\midrule
+Qubit budget & $m{+}1$ for $2^m$ pixels & More qubits per pixel value & Width vs depth trade-off \\
+Intensity encoding & Angles on one qubit & Basis-encoded values & Readout bias hits FRQI angles directly \\
+Typical bottlenecks & Multi-controlled prep & Storage / routing & Prep and routing dominate runtime budgets \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Surveys and roadmaps}
+Comprehensive reviews summarize applications, challenges, and future directions for quantum image processing~\cite{Ruan2021OpportunitiesChallenges,Wang2022ReviewQIP,Farooq2025SystematicReview,EbrahimpourKomleh2024QuantumComputingImageProcessing}. Roadmaps explicitly warn that practical bottlenecks are often engineering---state preparation, connectivity, and error mitigation---rather than the abstract asymptotics of a representation class~\cite{Iliyasu2013FRQIroadmap,Geng2023ImprovedFRQI}.
+
+From an applications perspective, surveys classify tasks into encoding, arithmetic transforms, segmentation, compression, and feature extraction~\cite{Wang2022ReviewQIP}. FRQI appears frequently as a pedagogical baseline because its state preparation mirrors textbook controlled-rotation patterns; NEQR appears when authors want bitwise access to intensities for arithmetic masks~\cite{Zhang2013NEQR}. The present thesis does not advocate one representation over another globally; instead it assumes FRQI because the downstream QHED reference implementation and hardware-oriented FRQI studies in the literature provide a coherent stack for benchmarking structural changes to preparation~\cite{Yao2017QHED,Geng2023ImprovedFRQI}.
+
+Pixel sizes in published QIP experiments are often small ($8\times 8$, $16\times 16$, occasionally $32\times 32$) because resource costs grow quickly with $N_{\mathrm{pix}}$~\cite{Farooq2025SystematicReview}. This scaling behavior is not merely asymptotic notation: transpilers expand controlled rotations into CX layers, and each CX accumulates error probability under depolarizing models. Therefore, even ``small'' images can produce circuits whose depth exceeds coherence budgets on real chips unless synthesis and layout are co-optimized~\cite{Geng2023ImprovedFRQI}.
+
+Finally, representation choice interacts with \emph{how} intensities are recovered. FRQI decodes angles from the color qubit; any SPAM error rotates the inferred intensity. NEQR decodes bit strings; leakage and misassignment errors map to different artifacts. The appendix regarding readout mitigation sketches the FRQI-relevant $2\times 2$ case~\cite{Mu2025GuidedImageFiltering}, while the noisy FRQI chapter focuses on gate noise before measurement.
+
+\section{Classical and quantum edge detection}
+\subsection{Classical edges}
+Classical edge detectors convolve an image with discrete kernels. Sobel operators approximate gradients with separable $3\times 3$ filters; Prewitt and Kirsch masks offer alternative derivative templates. Metrics such as PSNR and SSIM quantify similarity between a processed image and a reference~\cite{Zhang2015QSobel,Zhou2019PrewittNEQR,Xu2020Kirsch}.
+
+In practice, edge maps are seldom judged by PSNR alone: human perception correlates with contrast along contours, which motivates SSIM as a structural proxy. When comparing QHED outputs to Sobel references, this classical scoring perspective is inherited even though the quantum pipeline operates in a different signal domain until measurement and decoding~\cite{Chetia2021ImprovedSobelNEQR}.
+
+Multi-scale and directional extensions (e.g.\ eight-direction Sobel variants) exist because a single $3\times 3$ kernel is sensitive to noise and axis bias~\cite{Liu2022EightDirectionSobelNEQR}. Quantum analogues inherit the same robustness questions: any quantum edge map must eventually be interpreted against classical references for interpretability in imaging applications~\cite{Fan2019SobelNEQR}.
+
+\subsection{Quantum Hadamard edge detection (QHED)}
+Yao \textit{et al.} introduced QHED on FRQI-encoded images and reported experimental results~\cite{Yao2017QHED}. The Qiskit textbook notebook gives a pedagogical FRQI+QHED pipeline~\cite{QiskitTextbookQuantumEdgeDetection}. QHED is \emph{not} identical to Sobel: it uses Walsh--Hadamard structure in the frequency domain as a contrast proxy before returning to the spatial domain, which explains why SSIM against Sobel can drop as resolution grows even when FRQI reconstruction is perfect.
+
+\subsection{NEQR-based quantum Sobel families}
+Many authors adapt classical Sobel-like masks to NEQR and related encodings, including eight-direction variants and improved Sobel constructions~\cite{Fan2019SobelNEQR,Chetia2021ImprovedSobelNEQR,Liu2022EightDirectionSobelNEQR}. Hybrid detectors combine shallow quantum layers with classical post-processing to respect NISQ limits~\cite{Geng2022HybridNISQEdge}. Fully ``quantumized'' edge proposals continue this line~\cite{Shubha2024EdgeDetectionQuantumized}. Guided filtering and other image primitives have also been translated into quantum circuits~\cite{Mu2025GuidedImageFiltering}.
+
+\section{NISQ challenges for quantum image processing}
+Superconducting processors expose finite $T_1/T_2$, gate calibration errors, limited topology, and readout assignment noise~\cite{Geng2023ImprovedFRQI}. For image pipelines this implies: (i)~preparation circuits must be compiled to hardware-native gates with low CX depth; (ii)~error-aware evaluation should report both fidelity-style metrics and application metrics (e.g.\ edge SSIM); (iii)~hardware demonstrations must document layout, basis gates, and mitigation---themes that are mirrored in simulator-only form in this case~\cite{Geng2022HybridNISQEdge}.
+
+Coherence times set an upper envelope on circuit duration: if each layer requires microseconds of microwave control and $T_2$ is hundreds of microseconds, only hundreds of high-fidelity layers are realistic before decay dominates~\cite{Preskill2018NISQ}. Image FRQI circuits can exceed this envelope unless aggressively optimized, which is why resource accounting is a first-class part of this thesis's study rather than an appendix detail~\cite{Geng2023ImprovedFRQI}.
+
+Connectivity constraints force \emph{routing} swaps that inflate depth when logical interactions do not match physical edges. Although in this case resource CSV uses an unconstrained coupling map for apples-to-apples comparison of preparation templates, hardware projects must repeat the same study with device-native layouts~\cite{Geng2022HybridNISQEdge}. Hybrid schemes partially offload work to classical co-processors specifically to dodge these overheads~\cite{Geng2022HybridNISQEdge}.
+
+Finally, readout assignment errors affect any algorithm that ends in computational-basis sampling. Quantum image decoders that estimate continuous angles from repeated shots are particularly exposed, motivating calibration-aware pipelines~\cite{Mu2025GuidedImageFiltering}.
+
+\subsection{What simulators capture (and omit) relative to hardware}
+Density-matrix simulation with depolarizing channels answers ``how fragile is the ideal unitary under a Markovian gate-error model?''---a different question from ``what image emerges on IBM Quantum System One today?'' Real devices add drift, temporal correlations, spectator qubits, pulse distortions, and crosstalk that are expensive to calibrate into simulators~\cite{Preskill2018NISQ,Geng2023ImprovedFRQI}. The scope of this work is deliberate: holding the noise model fixed across naive and v-chain so that \emph{paired} comparisons isolate preparation structure rather than chasing device-specific nonstationarity. Readers should treat strong fidelity shifts as hypotheses to validate on hardware with layout-aware transpilation, not as deployment guarantees.
 
 \section{Multi-controlled gate synthesis}
-Multi-controlled $X$ and uniformly controlled rotations are the expensive primitives inside pixel-wise FRQI preparation. Recent decomposition papers reduce CX depth using ancillas, QFT-based constructions, or specialized unitary synthesis~\cite{Vale2023MCSU2,Azevedo2024LowDepthMCG,Arsoski2024MCXQFT,Zindorf2024EfficientMCG}. Qiskit exposes several \texttt{MCXGate} modes; we compare \texttt{noancilla} (worst-case scaling per slice) with \texttt{v-chain} (reusing $m-2$ dirty ancillas). This is an engineering choice aligned with synthesis literature, not a new quantum image format.
+FRQI preparation routines compare the position register against each pixel address, apply multi-controlled $X$ patterns, and steer $R_y$ rotations on the color qubit. The cost of a multi-controlled $X$ depends strongly on whether ancillas are available and how decomposition is performed~\cite{Vale2023MCSU2,Azevedo2024LowDepthMCG,Arsoski2024MCXQFT,Zindorf2024EfficientMCG}. Qiskit's \texttt{MCXGate} exposes modes such as \texttt{noancilla} (no clean ancillas, potentially exponential substructure per slice in worst-case counts) and \texttt{v-chain} (dirty ancillas, more qubits but often lower CX after transpilation). This thesis compares those engineering modes while holding the abstract FRQI state fixed.
+
+At a high level, multi-controlled synthesis trades \textbf{ancilla qubits} for \textbf{CNOT depth}. V-chain constructions are attractive when ancillas can be borrowed from idle workspace qubits or dirty registers because they reduce the sequential CX chains that dominate error accumulation~\cite{Azevedo2024LowDepthMCG}. Conversely, no-ancilla decompositions avoid widening the Hilbert space but can explode two-qubit counts, which is why this implementation only fully transpiles them at the smallest image where simulation and compilation remain tractable~\cite{Zindorf2024EfficientMCG}.
+
+The QFT-based constructions surveyed by Arsoski illustrate that multi-controlled gates are not monolithic: their optimal realization can depend on the surrounding circuit context~\cite{Arsoski2024MCXQFT}. In this case, scope is narrower---evaluation takes place between two built-in Qiskit strategies as proxies for ``expensive but compact'' versus ``cheaper but wider'' engineering choices.
+
+\begin{table}[htbp]
+\centering
+\caption{Informal asymptotic scaling for FRQI-style preparation (orders hide basis-dependent constants; parallel schedules are not assumed).}
+\label{tab:mcx-scaling}
+\small
+\begin{tabular}{p{3.6cm}p{2.4cm}p{2.4cm}p{4.6cm}}
+\toprule
+Template & Ancillas & Leading CX order & Comment \\
+\midrule
+Naive \texttt{noancilla} MCX per pixel & none & $\Theta(N_{\mathrm{pix}}\,2^{m})$ with $m{=}2\log_2 N$ & Matches worst-case decompositions of many controlled-$X$ layers~\cite{Zindorf2024EfficientMCG}. \\
+V-chain per pixel & $\le m{-}2$ dirty & $\Theta(N_{\mathrm{pix}}\,m)$ & Ancillas buy shorter chains; still linear in pixel count~\cite{Vale2023MCSU2,Azevedo2024LowDepthMCG}. \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Readout error mitigation}
-Readout errors are often modeled as a stochastic matrix mixing computational-basis outcomes. Inverting an empirically estimated confusion matrix (with regularization) yields mitigated outcome probabilities; the repository documents the $2\times 2$ color-qubit case and implements a shot-based demo. Broader mitigation families (zero-noise extrapolation, probabilistic error cancellation) are left for future work but motivate reporting raw and mitigated $p_1$ side by side.
+Readout errors are well modeled as stochastic matrices mixing computational outcomes; calibration experiments estimate $A$, and inversion (with Tikhonov-style regularization when $A$ is ill-conditioned) yields corrected probability estimates~\cite{Mu2025GuidedImageFiltering}. This work implements a $2\times 2$ demonstration on the FRQI color qubit, separate from the density-matrix depolarizing study, to show how mitigation would interface with intensity decoding.
 
-\section{Positioning of this work}
-Relative to representation surveys~\cite{Ruan2021OpportunitiesChallenges,Farooq2025SystematicReview} and NEQR edge variants~\cite{Fan2019SobelNEQR,Liu2022EightDirectionSobelNEQR}, we contribute a \textbf{paired structural and noisy-simulation study} of FRQI preparation only, with QHED held constant. Relative to improved-FRQI hardware papers~\cite{Geng2023ImprovedFRQI}, we provide open, simulator-first evidence at multiple resolutions with explicit resource tables and honest missing-data flags at $16\times 16$. The goal is reproducible NISQ-oriented engineering insight, not a new edge-detection algorithm.
+\section{Positioning of this thesis}
+\begin{table}[htbp]
+\centering
+\caption{Positioning relative to typical prior work (qualitative).}
+\label{tab:positioning}
+\small
+\begin{tabular}{p{2.8cm}p{3.5cm}p{3.5cm}p{3.5cm}}
+\toprule
+Dimension & Surveys / NEQR edge & Hybrid / hardware FRQI & This thesis \\
+\midrule
+Primary goal & Taxonomy, operators & Device-aware prep & Structural prep only \\
+Hardware & Mixed & Superconducting & Simulator (Aer) \\
+Noise & Often ideal & Device noise & Depolarizing + readout slice \\
+Metrics & Various & Fidelity / app-specific & PSNR, SSIM, edge SSIM, CX \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Relative to representation surveys~\cite{Ruan2021OpportunitiesChallenges,Farooq2025SystematicReview} and NEQR edge variants~\cite{Fan2019SobelNEQR,Liu2022EightDirectionSobelNEQR}, this work contributes to a \textbf{paired structural and noisy-simulation study} of FRQI preparation only, with QHED held constant. Relative to improved-FRQI hardware studies~\cite{Geng2023ImprovedFRQI}, this thesis provides open, simulator-first evidence at multiple resolutions with explicit resource tables and honest missing-data flags at $16\times 16$. The goal is reproducible NISQ-oriented engineering insight, not a new edge-detection operator.

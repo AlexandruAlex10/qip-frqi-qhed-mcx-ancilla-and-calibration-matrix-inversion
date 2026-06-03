@@ -1,0 +1,186 @@
+\chapter{Symbols and register ordering}
+
+\section{Symbol table}
+\begin{table}[htbp]
+\centering
+\caption{Frequently used symbols.}
+\begin{tabular}{ll}
+\toprule
+Symbol & Meaning \\
+\midrule
+$N$ & Linear image side length ($4$, $8$, or $16$) \\
+$m$ & $2\log_2 N$ position qubits \\
+$N_{\mathrm{pix}}$ & $N^2=2^m$ pixels \\
+$\theta_p$ & FRQI angle for pixel $p$ \\
+$p_1$ & Probability of outcome $\ket{1}$ on the color qubit \\
+$A$ & Readout confusion matrix ($2\times 2$) \\
+$\Delta$ & Paired difference (vchain$-$naive or mitigated$-$raw) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Register ordering}
+The implementation fixes the color qubit as the least significant bit of the joint index $(\mathrm{position}\Vert c)$, consistent with Qiskit bit-ordering in \texttt{src/frqi.py} and structural code in \texttt{src/improved.py}.
+
+\chapter{Reproduction checklist}
+
+Run from the repository root with the virtual environment in \texttt{requirements.txt}:
+\begin{enumerate}
+  \item \texttt{pytest}
+  \item \texttt{python scripts/frqi\_qhed\_sobel.py}
+  \item \texttt{python scripts/frqi\_structural\_resources.py}
+  \item \texttt{python scripts/noisy\_frqi\_sweep.py} (add \texttt{--allow-heavy-dm} only on machines with sufficient RAM)
+  \item \texttt{python scripts/noisy\_recon\_qhed\_edge\_metrics.py}
+  \item \texttt{python scripts/readout\_mitigation\_shot\_sweep.py}
+  \item \texttt{python scripts/build\_results\_tables.py --require-figures}
+\end{enumerate}
+Consult \texttt{thesis/results\_configuration.md} for manifest timestamps and pinned versions.
+
+\chapter{Supplementary tables}
+
+The full paired naive versus v-chain pivot lives in \texttt{thesis/generated/tables.md}. \Cref{tab:noisy-wide-excerpt} reproduces a small excerpt; the complete CSV is \texttt{outputs/noisy\_recon\_qhed\_edges.csv}.
+
+\begin{table}[htbp]
+\centering
+\caption{Excerpt of noisy edge metrics (values rounded for display).}
+\label{tab:noisy-wide-excerpt}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+image & scale & edge\_SSIM naive & edge\_SSIM vchain & $\Delta$ \\
+\midrule
+test\_4x4 & 0.05 & 0.195 & -0.141 & -0.336 \\
+test\_8x8 & 0.20 & $\approx 0$ & 0.020 & 0.020 \\
+test\_16x16 & 0.10 & 0.037 & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+Rows with v-chain missing at $16\times16$ appear as \texttt{NaN} in the CSV when density-matrix simulation is skipped.
+
+\chapter{Complexity and scaling reference}
+
+\begin{table}[htbp]
+\centering
+\caption{Informal scaling reminders for this thesis (constants depend on transpiler and basis).}
+\begin{tabular}{ll}
+\toprule
+Object & Scaling \\
+\midrule
+Statevector amplitudes & $O(2^n)$ complex numbers \\
+Density matrix entries & $O(4^n)$ real numbers \\
+FRQI qubits (this repo) & $n = 1 + m$ with $m=2\log_2 N$ \\
+Pixels & $N_{\mathrm{pix}} = 2^m$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Frozen bundle parameters (excerpt)}
+
+The repository pins CSV rows to JSON manifests; the following bullets summarize \texttt{thesis/results\_configuration.md} as of the submission snapshot and should be read alongside \texttt{thesis/results\_bundle.yaml}.
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Noisy reconstructions / edge metrics:} \texttt{outputs/noisy\_recon\_qhed\_edges.csv} pairs with \texttt{experiment\_manifest\_noisy\_recon\_qhed\_edges.json}; images \texttt{test\_4x4}, \texttt{test\_8x8}, \texttt{test\_16x16}; methods \texttt{naive} and \texttt{vchain}; synthetic depolarizing scales $0.0$--$0.2$ in steps of $0.05$; \texttt{mock\_backend\_seed=42}; Qiskit~1.3.3 and Aer~0.16.4 on Python~3.11.3; \texttt{transpile\_optimization\_level=0}.
+  \item \textbf{Readout mitigation:} \texttt{outputs/readout\_mitigation\_shot\_sweep.csv} with calibration shots 8000, data shots 12000, Tikhonov \texttt{rcond} $10^{-6}$, bootstrap replicates 400, synthetic readout errors $r_{01}=0.08$, $r_{10}=0.05$, shot seeds $1$--$10$.
+  \item \textbf{Noisy FRQI sweep:} \texttt{outputs/noisy\_frqi\_metrics.csv} shares the same image/method/noise grid and optimization level~0 manifest.
+\end{itemize}
+
+\chapter{Manifest fields (selected)}
+
+JSON manifests under \texttt{outputs/} typically record: Qiskit and Aer versions, random seeds, noise mode, topology, transpile optimization level, image identifiers, flags such as \texttt{allow\_heavy\_dm}, and UTC timestamps. These fields allow a third party to detect stale CSVs relative to regenerated manifests.
+
+\chapter{Noisy edge metrics (extended excerpt)}
+
+Table~\ref{tab:noisy-long} lists additional rows from \texttt{outputs/noisy\_recon\_qhed\_edges.csv} for \texttt{test\_4x4} and \texttt{test\_8x8} at all recorded noise scales. Values are rounded; see the CSV for full precision and manifest metadata.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\caption{Noisy reconstruction edge SSIM (naive vs v-chain) for smaller test images.\label{tab:noisy-long}}
+\begin{tabular}{p{2.0cm}rrrr}
+\toprule
+image & scale & edge\_SSIM naive & edge\_SSIM vchain & $\Delta$\,edge\_SSIM \\
+\midrule
+test\_4x4 & 0.00 & 0.196 & $-0.108$ & $-0.303$ \\
+test\_4x4 & 0.05 & 0.195 & $-0.141$ & $-0.336$ \\
+test\_4x4 & 0.10 & 0.167 & $-0.141$ & $-0.308$ \\
+test\_4x4 & 0.15 & 0.195 & 0.219 & 0.024 \\
+test\_4x4 & 0.20 & 0.580 & 0.169 & $-0.410$ \\
+test\_8x8 & 0.00 & 0.163 & 0.032 & $-0.131$ \\
+test\_8x8 & 0.05 & $-0.005$ & $-0.006$ & $-0.000$ \\
+test\_8x8 & 0.10 & $0.000$ & $-0.095$ & $-0.095$ \\
+test\_8x8 & 0.15 & $0.000$ & $-0.272$ & $-0.272$ \\
+test\_8x8 & 0.20 & $0.000$ & 0.020 & 0.020 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\chapter{Acronyms and repository naming}
+
+\begin{description}[style=nextline, leftmargin=2.2cm, labelwidth=2cm, font=\normalfont\bfseries]
+  \item[FRQI] Flexible representation of quantum images; intensity encoded as $R_y$ angles on a color qubit indexed by a position register.
+  \item[QHED] Quantum Hadamard edge detection; Walsh--Hadamard style processing followed by classical Sobel scoring in this repository.
+  \item[NISQ] Noisy intermediate-scale quantum; devices large enough to explore heuristics yet dominated by hardware imperfections.
+  \item[CX] Controlled-NOT (CNOT) count after transpilation to the native two-qubit gate.
+  \item[DM] Density-matrix simulation method in Qiskit Aer (\texttt{density\_matrix}).
+  \item[SPAM] State preparation and measurement errors collectively.
+  \item[SSIM / PSNR] Structural similarity index and peak signal-to-noise ratio, computed with scikit-image conventions on \texttt{uint8} rasters.
+  \item[\texttt{noancilla}] Qiskit \texttt{MCXGate} synthesis mode without dedicated ancillas for multi-controlled $X$.
+  \item[\texttt{v-chain}] Qiskit \texttt{MCXGate} dirty-ancilla v-chain decomposition lowering CX depth in many benchmarks.
+  \item[\texttt{struct\_naive\_slice\_scaled}] Engineering extrapolation that transpiles one representative naive pixel slice and multiplies depth/CX by $N_{\mathrm{pix}}$.
+\end{description}
+
+The scripts \texttt{frqi\_structural\_resources.py}, \texttt{noisy\_frqi\_sweep.py}, and \texttt{noisy\_recon\_qhed\_edge\_metrics.py} write machine-readable CSV manifests under \texttt{outputs/}; the thesis only cites stable excerpts so the PDF remains buildable on fresh clones.
+
+\chapter{Structural metrics (CSV mirror)}
+Table~\ref{tab:struct-csv} mirrors \texttt{outputs/frqi\_structural\_metrics.csv} for auditability. Values follow the structural toolchain in \cref{ch:methods}; rows labelled \texttt{struct\_naive\_full} exist only for $4\times 4$ because full naive transpilation becomes unwieldy at larger $m$.
+
+\begin{table}[htbp]
+\centering
+\caption{Structural FRQI preparation metrics (transpiled, optimization level~3, unconstrained topology).\label{tab:struct-csv}}
+\scriptsize
+\begin{tabular}{@{}lrrlrrr@{}}
+\toprule
+image & $N$ & $m$ & kind & qubits & depth & CX \\
+\midrule
+test\_4x4 & 4 & 4 & struct\_naive\_full & 6 & 2246 & 944 \\
+test\_4x4 & 4 & 4 & struct\_naive\_slice & 6 & 130 & 50 \\
+test\_4x4 & 4 & 4 & struct\_naive\_slice\_scaled & 6 & 2080 & 800 \\
+test\_4x4 & 4 & 4 & struct\_vchain & 8 & 839 & 331 \\
+test\_8x8 & 8 & 6 & struct\_naive\_slice & 8 & 209 & 86 \\
+test\_8x8 & 8 & 6 & struct\_naive\_slice\_scaled & 8 & 13376 & 5504 \\
+test\_8x8 & 8 & 6 & struct\_vchain & 12 & 5423 & 2147 \\
+test\_16x16 & 16 & 8 & struct\_naive\_slice & 10 & 288 & 122 \\
+test\_16x16 & 16 & 8 & struct\_naive\_slice\_scaled & 10 & 73728 & 31232 \\
+test\_16x16 & 16 & 8 & struct\_vchain & 16 & 29435 & 11663 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The scaled naive rows intentionally ignore global optimizations across pixels; they isolate the multi-controlled skeleton cost as discussed in \texttt{thesis/design/resource\_and\_complexity.md}. Comparing them to v-chain totals therefore answers an engineering order-of-magnitude question rather than claiming optimality of either compiled circuit.
+
+\chapter{Simulator wall-clock excerpt ($4\times4$ and $8\times8$)}
+Table~\ref{tab:wallclock} records representative \texttt{wall\_s} fields from \texttt{thesis/generated/tables.md} for the noisy FRQI sweep (density-matrix method, optimization level~0 per manifest). Times vary with CPU thermal state; the point is order-of-magnitude feasibility on a workstation, not a reproducible benchmark.
+
+\begin{table}[htbp]
+\centering
+\caption{Wall-clock seconds for selected noisy FRQI rows (two decimals).}
+\label{tab:wallclock}
+\footnotesize
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+image & method & scale & wall (s) & total qubits \\
+\midrule
+test\_4x4 & naive & 0.00 & 0.67 & 6 \\
+test\_4x4 & vchain & 0.00 & 0.36 & 8 \\
+test\_4x4 & naive & 0.20 & 0.82 & 6 \\
+test\_4x4 & vchain & 0.20 & 0.34 & 8 \\
+test\_8x8 & naive & 0.00 & 11.92 & 8 \\
+test\_8x8 & vchain & 0.00 & 49.22 & 12 \\
+test\_8x8 & naive & 0.20 & 12.48 & 8 \\
+test\_8x8 & vchain & 0.20 & 54.81 & 12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+At $8\times8$, v-chain circuits are wider; even with fewer CX than naive after transpilation, scheduling a larger Hilbert space can increase wall time for density-matrix evolution. Interpreting wall-clock alongside CX therefore matters for lab scheduling, not only for asymptotic counts.
+

@@ -48,7 +48,7 @@ pytest
 
 ## Thesis (LaTeX)
 
-The UPT English template lives under `thesis/bachelors_en/`. Chapters: **Introduction** (`chapters/4-Introduction.tex`), **State of the art** (`chapters/5-RelatedWork.tex`), **Methods, experiments, and results** (`chapters/6-Body.tex`), **Conclusions** (`chapters/7-Conclusions.tex`), plus abstracts and `customs.tex`. Stable result tables for `\input` are in `thesis/bachelors_en/generated/results_tables.tex` (sync with `thesis/generated/` after `build_results_tables.py` if numbers change).
+The UPT English template lives under `thesis/bachelors_en/`. Chapters: **Introduction** (`chapters/4-Introduction.tex`), **State of the art and theoretical background** (`chapters/5-RelatedWork.tex`), **Methods and experimental setup** (`chapters/6-Methods.tex`), **Results** (`chapters/7-Results.tex`), **Conclusions** (`chapters/8-Conclusions.tex`), **Appendices** (`chapters/9-Appendices.tex`), plus abstracts and `customs.tex`. Stable result tables for `\input` are in `thesis/bachelors_en/generated/results_tables.tex` (sync with `thesis/generated/` after `build_results_tables.py` if numbers change).
 
 From `thesis/bachelors_en/`, build with MiKTeX or TeX Live:
 

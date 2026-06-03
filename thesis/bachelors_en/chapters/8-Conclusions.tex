@@ -13,8 +13,16 @@ This thesis examined NISQ-oriented structural optimization of FRQI state prepara
 \section{Practical implications}
 For quantum image pipelines on near-term devices, synthesis choices for multi-controlled preparation matter as much as the abstract FRQI model~\cite{Le2011FRQI,Vale2023MCSU2,Azevedo2024LowDepthMCG}. Practitioners should budget ancillas and report transpiled CX/depth alongside fidelity metrics. Edge operators such as QHED should be validated against classical references per resolution~\cite{QiskitTextbookQuantumEdgeDetection}. Mitigation should be planned at the readout layer when intensities are inferred from measurement statistics~\cite{Mu2025GuidedImageFiltering}.
 
+\section{Reflection on the NISQ narrative}
+Preskill's NISQ framing emphasizes that near-term devices are best viewed as platforms for \emph{exploration} of noisy quantum dynamics and heuristic algorithms, not only as stepping stones toward fault tolerance~\cite{Preskill2018NISQ}. The results in this thesis align with that caution: v-chain wins transpiled CX convincingly at large $N$, yet paired edge SSIM under noise does not show a clear winner. Interpreting resource reductions as application-level superiority would over-read the evidence~\cite{NielsenChuang2010}.
+
 \section{Limitations}
 No hardware experiments were performed. Image sizes are tiny by classical standards. Scaled naive baselines extrapolate from one transpiled slice and may not capture global optimizations a full circuit could admit. $16\times 16$ v-chain noisy and edge results are frequently absent. Exploratory Wilcoxon tests use only eight paired noise cells for edge metrics.
+
+\section{Ethics, integrity, and responsible claims}
+Quantum computing research intersects public narratives about ``exponential speedups'' and near-term disruption. This thesis deliberately under-claims relative to its strongest resource result: lower transpiled CX counts are necessary but not sufficient for better application metrics under noise. Presenting inconclusive edge SSIM as inconclusive---rather than cherry-picking fidelity $p$-values---follows basic scientific integrity norms and matches Preskill's counsel to treat NISQ devices as heuristic platforms~\cite{Preskill2018NISQ}.
+
+From a sustainability perspective, density-matrix simulation at 16 qubits is energy- and memory-intensive; documenting when rows are skipped (\texttt{NaN}) is therefore not only an engineering footnote but also an honest accounting of computational cost. Readers replicating the study should enable \texttt{--allow-heavy-dm} only on suitable workstations.
 
 \section{Future work}
 Promising extensions include: (i)~IBM Quantum shots on the smallest circuits with layout-aware transpilation; (ii)~completing $16\times 16$ v-chain density-matrix runs via circuit cutting or reduced noise grids; (iii)~zero-noise extrapolation and richer mitigation stacks beyond $2\times 2$ readout inversion; (iv)~comparing additional \texttt{MCXGate} modes from recent synthesis papers~\cite{Arsoski2024MCXQFT,Zindorf2024EfficientMCG}; and (v)~hybrid edge schemes that keep shallow quantum layers~\cite{Geng2022HybridNISQEdge,Shubha2024EdgeDetectionQuantumized} while adopting cheaper FRQI preparation.
