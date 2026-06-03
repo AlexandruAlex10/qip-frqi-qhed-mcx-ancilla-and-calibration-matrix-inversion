@@ -14,14 +14,20 @@
 \linespread{1.15} 
 \setlength{\parindent}{1.5cm}
 
-% Link border style
-\hypersetup{
+% Link border style (requires hyperref; disabled when hyperref is not loaded)
+\makeatletter
+\@ifpackageloaded{hyperref}{%
+\hypersetup{%
     pdfborderstyle={/S/U/W 1}, % underline links instead of boxes
     linkbordercolor=red,       % color of internal links
     citebordercolor=green,     % color of links to bibliography
     filebordercolor=orange,   % color of file links
     urlbordercolor=blue        % color of external links
-}
+}%
+}{%
+% no-op without hyperref
+}%
+\makeatother
 
 \lstset{
 	numbers=left, 

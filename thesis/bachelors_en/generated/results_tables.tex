@@ -1,49 +1,6 @@
-% Stable subset copied from thesis/generated/tables.tex (regenerate via build_results_tables.py)
+% Legacy bundle: all primary numeric tables (structural, encoding, readout).
+% Edge excerpt lives in \texttt{results\_table\_noisy\_edges\_excerpt.tex} and is \input{} from the Results chapter only.
 
-\begin{table}[htbp]
-\centering
-\caption{Ideal FRQI encoding and QHED vs Sobel (transpiled initialize)}
-\label{tab:encoding_baseline}
-\begin{tabular}{lrrrrrr}
-\toprule
-image & size & qubits & depth & CX & FRQI SSIM & QHED--Sobel SSIM \\
-\midrule
-test\_4x4 & 4 & 5 & 76 & 26 & 1.0 & 1.0 \\
-test\_8x8 & 8 & 7 & 364 & 120 & 1.0 & 0.163 \\
-test\_16x16 & 16 & 9 & 1569 & 502 & 1.0 & 0.013 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[htbp]
-\centering
-\caption{Structural FRQI preparation: transpiled depth and CX (optimization level 3)}
-\label{tab:structural_resources}
-\small
-\begin{tabular}{lrrlrrr}
-\toprule
-image & $N$ & kind & qubits & depth & CX \\
-\midrule
-test\_4x4 & 4 & naive full & 6 & 2436 & 1160 \\
-test\_4x4 & 4 & naive scaled & 6 & 2592 & 1184 \\
-test\_4x4 & 4 & v-chain & 8 & 839 & 331 \\
-test\_8x8 & 8 & naive scaled & 8 & 26944 & 14208 \\
-test\_8x8 & 8 & v-chain & 12 & 5423 & 2147 \\
-test\_16x16 & 16 & naive scaled & 10 & 229632 & 114176 \\
-test\_16x16 & 16 & v-chain & 16 & 29435 & 11663 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[htbp]
-\centering
-\caption{Readout calibration-matrix mitigation on the color qubit ($4\times 4$, 10 seeds)}
-\label{tab:readout_summary}
-\begin{tabular}{lrrrr}
-\toprule
-image & $n_{\mathrm{seeds}}$ & mean $p_1$ raw & mean $p_1$ mitigated & mean $\Delta$ \\
-\midrule
-test\_4x4 & 10 & 0.515 & 0.499 & $-0.015$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+\input{generated/results_table_structural_resources}
+\input{generated/results_table_encoding_baseline}
+\input{generated/results_table_readout_summary}

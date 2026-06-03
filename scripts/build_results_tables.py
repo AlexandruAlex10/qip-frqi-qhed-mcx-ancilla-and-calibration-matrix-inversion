@@ -323,12 +323,32 @@ def _df_to_markdown(df: pd.DataFrame, *, max_rows: int | None = None) -> str:
     return "\n".join(lines)
 
 
-def _df_to_latex(df: pd.DataFrame, caption: str, label: str) -> str:
-    # escape underscores for latex
+def _df_to_latex(df: pd.DataFrame, caption: str, label: str, *, float_spec: str = "htbp") -> str:
+    # escape underscores for latex caption/label only; pandas to_latex escapes cell content
     cap = caption.replace("_", r"\_")
     lab = label.replace("_", r"\_")
     body = df.to_latex(index=False, float_format="%.4g", escape=True)
-    return f"% auto-generated\n\\begin{{table}}[t]\n\\centering\n\\caption{{{cap}}}\n\\label{{{lab}}}\n{body}\\end{{table}}\n"
+    return f"% auto-generated\n\\begin{{table}}[{float_spec}]\n\\centering\n\\caption{{{cap}}}\n\\label{{{lab}}}\n{body}\\end{{table}}\n"
+
+
+def _write_bachelors_tex_fragment(repo_root: Path, filename: str, tex: str) -> None:
+    """Mirror key tables into thesis/bachelors_en/generated for stable \\input{} from the PDF."""
+    dest = repo_root / "thesis" / "bachelors_en" / "generated" / filename
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text(tex.rstrip() + "\n", encoding="utf-8")
+
+
+def noisy_edge_excerpt_df(wide: pd.DataFrame) -> pd.DataFrame:
+    """Narrow excerpt for Results chapter: paired edge SSIM at noise_scale>0 on small test images."""
+    cols = ["image", "noise_scale", "edge_ssim_naive", "edge_ssim_vchain", "delta_edge_ssim_vchain_minus_naive"]
+    miss = [c for c in cols if c not in wide.columns]
+    if miss:
+        return pd.DataFrame()
+    sub = wide[(wide["noise_scale"] > 0) & (wide["image"].isin(["test_4x4", "test_8x8"]))].copy()
+    if sub.empty:
+        return sub
+    out = sub[cols].sort_values(["image", "noise_scale"])
+    return out.reset_index(drop=True)
 
 
 def write_provenance_snapshot(repo_root: Path, report: LoadReport, dest: Path) -> None:
@@ -529,19 +549,44 @@ def main() -> int:
         t = table_structural(frames["frqi_structural_metrics"])
         t.to_csv(out_dir / "table_structural_resources.csv", index=False)
         md_chunks.append("## Table: structural resources\n\n" + _df_to_markdown(t) + "\n")
-        tex_chunks.append(_df_to_latex(t, "Structural naive vs v-chain resource counts", "tab:structural_resources"))
+        struct_tex = _df_to_latex(
+            t,
+            "Structural FRQI preparation: transpiled depth and CX (optimization level 3)",
+            "tab:structural_resources",
+        )
+        tex_chunks.append(struct_tex)
 
     if "noisy_recon_qhed_edges" in frames:
         wide = pivot_noisy_edges(frames["noisy_recon_qhed_edges"])
         wide.to_csv(out_dir / "table_noisy_edges_paired_wide.csv", index=False)
         md_chunks.append("## Table: noisy edge metrics (wide)\n\n" + _df_to_markdown(wide) + "\n")
-        tex_chunks.append(_df_to_latex(wide.head(40), "Noisy recon + QHED edge metrics naive vs vchain (excerpt)", "tab:noisy_edges_wide"))
+        tex_chunks.append(
+            _df_to_latex(
+                wide.head(40),
+                "Noisy recon + QHED edge metrics naive vs vchain (excerpt)",
+                "tab:noisy_edges_wide",
+            )
+        )
+        ex = noisy_edge_excerpt_df(wide)
+        if not ex.empty:
+            ex_tex = _df_to_latex(
+                ex,
+                "Noisy reconstruction: edge SSIM naive vs v-chain (excerpt, noise scale $>0$, linear topology).",
+                "tab:noisy_edges_excerpt",
+            )
+            _write_bachelors_tex_fragment(repo_root, "results_table_noisy_edges_excerpt.tex", ex_tex)
 
     if "readout_mitigation_shot_sweep" in frames:
         rs = readout_summary(frames["readout_mitigation_shot_sweep"])
         rs.to_csv(out_dir / "table_readout_summary_by_image.csv", index=False)
         md_chunks.append("## Table: readout mitigation summary\n\n" + _df_to_markdown(rs) + "\n")
-        tex_chunks.append(_df_to_latex(rs, "Readout mitigation summary by image", "tab:readout_summary"))
+        tex_chunks.append(
+            _df_to_latex(
+                rs,
+                r"Readout calibration-matrix mitigation on the color qubit ($4\times 4$, 10 seeds)",
+                "tab:readout_summary",
+            )
+        )
 
     if "noisy_frqi_metrics" in frames:
         sub = frames["noisy_frqi_metrics"]
@@ -550,6 +595,14 @@ def main() -> int:
 
     (out_dir / "tables.md").write_text("\n".join(md_chunks), encoding="utf-8")
     (out_dir / "tables.tex").write_text("\n".join(tex_chunks), encoding="utf-8")
+
+    bundle = (
+        "% auto-generated bundle (structural, encoding, readout).\n"
+        "\\input{generated/results_table_structural_resources}\n"
+        "\\input{generated/results_table_encoding_baseline}\n"
+        "\\input{generated/results_table_readout_summary}\n"
+    )
+    _write_bachelors_tex_fragment(repo_root, "results_tables.tex", bundle)
 
     # --- stats ---
     stats_md: list[str] = ["# Paired statistics (exploratory)\n"]

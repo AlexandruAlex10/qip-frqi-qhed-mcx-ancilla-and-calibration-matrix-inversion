@@ -1,0 +1,22 @@
+% Fragment: paired edge SSIM excerpt for \texttt{noise\_scale} $>0$ (sync with outputs/noisy\_recon\_qhed\_edges.csv via build_results_tables.py)
+
+\begin{table}[htbp]
+\centering
+\caption{Noisy reconstruction: edge SSIM naive vs v-chain (excerpt, $\mathrm{noise\_scale}>0$, linear topology).}
+\label{tab:noisy_edges_excerpt}
+\footnotesize
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+image & scale & edge\_SSIM naive & edge\_SSIM vchain & $\Delta$\,edge\_SSIM \\
+\midrule
+test\_4x4 & 0.05 & 0.195 & $-0.141$ & $-0.336$ \\
+test\_4x4 & 0.10 & 0.167 & $-0.141$ & $-0.308$ \\
+test\_4x4 & 0.15 & 0.195 & 0.219 & 0.024 \\
+test\_4x4 & 0.20 & 0.580 & 0.169 & $-0.410$ \\
+test\_8x8 & 0.05 & $-0.005$ & $-0.006$ & $-0.000$ \\
+test\_8x8 & 0.10 & $0.000$ & $-0.095$ & $-0.095$ \\
+test\_8x8 & 0.15 & $0.000$ & $-0.272$ & $-0.272$ \\
+test\_8x8 & 0.20 & $0.000$ & 0.020 & 0.020 \\
+\bottomrule
+\end{tabular}
+\end{table}

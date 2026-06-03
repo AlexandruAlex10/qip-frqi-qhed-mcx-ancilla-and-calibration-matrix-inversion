@@ -1,0 +1,16 @@
+% Fragment: ideal encoding baseline (regenerate via build_results_tables.py → thesis/bachelors_en/generated/)
+
+\begin{table}[htbp]
+\centering
+\caption{Ideal FRQI encoding and QHED vs Sobel (transpiled initialize)}
+\label{tab:encoding_baseline}
+\begin{tabular}{lrrrrrr}
+\toprule
+image & size & qubits & depth & CX & FRQI SSIM & QHED--Sobel SSIM \\
+\midrule
+test\_4x4 & 4 & 5 & 76 & 26 & 1.0 & 1.0 \\
+test\_8x8 & 8 & 7 & 364 & 120 & 1.0 & 0.163 \\
+test\_16x16 & 16 & 9 & 1569 & 502 & 1.0 & 0.013 \\
+\bottomrule
+\end{tabular}
+\end{table}

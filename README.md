@@ -48,7 +48,7 @@ pytest
 
 ## Thesis (LaTeX)
 
-The UPT English template lives under `thesis/bachelors_en/`. Chapters: **Introduction** (`chapters/4-Introduction.tex`), **State of the art and theoretical background** (`chapters/5-RelatedWork.tex`), **Methods and experimental setup** (`chapters/6-Methods.tex`), **Results** (`chapters/7-Results.tex`), **Conclusions** (`chapters/8-Conclusions.tex`), **Appendices** (`chapters/9-Appendices.tex`), plus abstracts and `customs.tex`. Stable result tables for `\input` are in `thesis/bachelors_en/generated/results_tables.tex` (sync with `thesis/generated/` after `build_results_tables.py` if numbers change).
+The UPT English template lives under `thesis/bachelors_en/`. Chapters: **Introduction** (`chapters/4-Introduction.tex`), **State of the art and theoretical background** (`chapters/5-RelatedWork.tex`), **Methods and experimental setup** (`chapters/6-Methods.tex`), **Results** (`chapters/7-Results.tex`), **Conclusions** (`chapters/8-Conclusions.tex`), **Appendices** (`chapters/9-Appendices.tex`), plus abstracts and `customs.tex`. Numeric tables are split under `thesis/bachelors_en/generated/results_table_*.tex` (one fragment per Results section); `results_tables.tex` bundles structural, encoding, and readout for convenience. Sync encoding/structural/readout fragments from `thesis/generated/tables.tex` after `build_results_tables.py` if numbers change; the script auto-refreshes `results_table_noisy_edges_excerpt.tex` and `results_tables.tex`.
 
 From `thesis/bachelors_en/`, build with MiKTeX or TeX Live:
 
@@ -57,6 +57,12 @@ pdflatex -interaction=nonstopmode main.tex
 bibtex main
 pdflatex -interaction=nonstopmode main.tex
 pdflatex -interaction=nonstopmode main.tex
+```
+
+Or from the repo root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build_thesis.ps1
 ```
 
 `main.tex` uses **Latin Modern** instead of the template Nimbus fonts for portable installs, and **hyperref** is commented out when a minimal MiKTeX lacks its dependency tree; re-enable `\usepackage{hyperref}` and `\usepackage{csquotes}` locally for PDF links and full babel/biblatex integration.
@@ -69,7 +75,7 @@ The `outputs/` contract is documented in `thesis/outputs_registry.md` (see `thes
 python scripts\build_results_tables.py
 ```
 
-This validates required columns, warns when CSV timestamps disagree with linked `experiment_manifest_*.json` (use `--strict` to fail on those checks and on missing `expected_figures`), and writes Markdown/LaTeX fragments plus plots under `thesis/generated/` (gitignored). Use `--require-figures` if PNGs under `outputs/` must exist before building the thesis.
+This validates required columns, warns when CSV timestamps disagree with linked `experiment_manifest_*.json` (use `--strict` to fail on those checks and on missing `expected_figures`), and writes Markdown/LaTeX fragments plus plots under `thesis/generated/` (gitignored). It also writes `thesis/bachelors_en/generated/results_table_noisy_edges_excerpt.tex` and refreshes `results_tables.tex`. Use `--require-figures` if PNGs under `outputs/` must exist before building the thesis.
 
 
 ## Run demos
