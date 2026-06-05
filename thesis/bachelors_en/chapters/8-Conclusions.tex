@@ -2,7 +2,7 @@
 \thispagestyle{pagestyle}
 
 \section{Summary of contributions}
-This thesis examined NISQ-oriented structural optimization of FRQI state preparation for a fixed QHED edge-detection downstream stage. The work is entirely \textbf{simulator-based}, using open Python tooling and versioned CSV manifests.
+This thesis examined NISQ-oriented structural optimization of FRQI state preparation for a fixed QHED edge-detection downstream stage. The work is entirely \textbf{simulator-based}, using open Python tooling and versioned CSV manifests. Beyond the headline resource win for v-chain, the project contributes a \textbf{transparent evaluation recipe}---resources, noisy-state fidelity, and edge-map SSIM on the same grid---so that synthesis trade-offs in QIP pipelines can be discussed without conflating transpiler CX with perceptual endpoints.
 
 \textbf{Structural resources.} Replacing naive \texttt{noancilla} multi-controlled $X$ decompositions with a v-chain ancilla pattern reduces transpiled CX dramatically at larger images: at $16\times 16$, v-chain reports 11\,663~CX versus a scaled naive estimate of 114\,176~CX, with higher qubit width (16 vs 10). At $4\times 4$, full naive transpilation (1160~CX) still exceeds v-chain (331~CX) on fewer total qubits. These numbers quantify preparation cost---often the bottleneck named in FRQI hardware studies~\cite{Geng2023ImprovedFRQI}---without assuming a new image representation.
 

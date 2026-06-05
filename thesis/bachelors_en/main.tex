@@ -1,5 +1,6 @@
 \documentclass[12pt, english, a4paper]{report}
 \usepackage{babel}
+\usepackage{csquotes}
 \usepackage{microtype}
 \usepackage{graphicx}
 \usepackage{fancyhdr}
@@ -12,8 +13,6 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{url}
-% hyperref omitted in this checkout for minimal MiKTeX installs; re-enable locally for PDF links.
-%\usepackage{hyperref}
 \usepackage{float}
 \usepackage{placeins}
 \usepackage{caption}
@@ -26,11 +25,13 @@
 \usepackage{braket}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta}
-\usepackage{cleveref}
 
-\usepackage[style=ieee,backend=bibtex,sorting=none]{biblatex}
-
+\usepackage[style=ieee,backend=biber,sorting=none]{biblatex}
 \addbibresource{bibliography.bib}
+
+% Load after biblatex; cleveref must follow hyperref (see cleveref manual).
+\usepackage{hyperref}
+\usepackage{cleveref}
 
 \input{customs}
 \input{components/Format}
@@ -54,10 +55,10 @@
 \include{chapters/7-Results}
 \include{chapters/8-Conclusions}
 
+\printbibliography[heading=bibnumbered]
+
 \appendix
 \include{chapters/9-Appendices}
-
-\printbibliography[heading=bibnumbered]
 
 \includepdf[pages={1}]{\declarationPath}
 

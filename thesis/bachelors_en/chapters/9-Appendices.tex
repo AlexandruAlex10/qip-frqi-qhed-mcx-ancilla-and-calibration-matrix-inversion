@@ -38,8 +38,6 @@ Consult \texttt{thesis/results\_configuration.md} for manifest timestamps and pi
 
 \chapter{Supplementary tables}
 
-The full paired naive versus v-chain pivot lives in \texttt{thesis/generated/tables.md}. \Cref{tab:noisy-wide-excerpt} reproduces a small excerpt; the complete CSV is \texttt{outputs/noisy\_recon\_qhed\_edges.csv}.
-
 \begin{table}[htbp]
 \centering
 \caption{Excerpt of noisy edge metrics (values rounded for display).}
@@ -55,6 +53,7 @@ test\_16x16 & 0.10 & 0.037 & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
+The full paired naive versus v-chain pivot lives in \texttt{thesis/generated/tables.md}. \Cref{tab:noisy-wide-excerpt} reproduces a small excerpt; the complete CSV is \texttt{outputs/noisy\_recon\_qhed\_edges.csv}.
 Rows with v-chain missing at $16\times16$ appear as \texttt{NaN} in the CSV when density-matrix simulation is skipped.
 
 \chapter{Complexity and scaling reference}
@@ -90,12 +89,11 @@ JSON manifests under \texttt{outputs/} typically record: Qiskit and Aer versions
 
 \chapter{Noisy edge metrics (extended excerpt)}
 
-Table~\ref{tab:noisy-long} lists additional rows from \texttt{outputs/noisy\_recon\_qhed\_edges.csv} for \texttt{test\_4x4} and \texttt{test\_8x8} at all recorded noise scales. Values are rounded; see the CSV for full precision and manifest metadata.
-
 \begin{table}[htbp]
 \centering
 \footnotesize
-\caption{Noisy reconstruction edge SSIM (naive vs v-chain) for smaller test images.\label{tab:noisy-long}}
+\caption{Noisy reconstruction edge SSIM (naive vs v-chain) for smaller test images.}
+\label{tab:noisy-long}
 \begin{tabular}{p{2.0cm}rrrr}
 \toprule
 image & scale & edge\_SSIM naive & edge\_SSIM vchain & $\Delta$\,edge\_SSIM \\
@@ -113,6 +111,8 @@ test\_8x8 & 0.20 & $0.000$ & 0.020 & 0.020 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Table~\ref{tab:noisy-long} lists additional rows from \texttt{outputs/noisy\_recon\_qhed\_edges.csv} for \texttt{test\_4x4} and \texttt{test\_8x8} at all recorded noise scales. Values are rounded; see the CSV for full precision and manifest metadata.
 
 \chapter{Acronyms and repository naming}
 
@@ -132,11 +132,11 @@ test\_8x8 & 0.20 & $0.000$ & 0.020 & 0.020 \\
 The scripts \texttt{frqi\_structural\_resources.py}, \texttt{noisy\_frqi\_sweep.py}, and \texttt{noisy\_recon\_qhed\_edge\_metrics.py} write machine-readable CSV manifests under \texttt{outputs/}; the thesis only cites stable excerpts so the PDF remains buildable on fresh clones.
 
 \chapter{Structural metrics (CSV mirror)}
-Table~\ref{tab:struct-csv} mirrors \texttt{outputs/frqi\_structural\_metrics.csv} for auditability. Values follow the structural toolchain in \cref{ch:methods}; rows labelled \texttt{struct\_naive\_full} exist only for $4\times 4$ because full naive transpilation becomes unwieldy at larger $m$.
 
 \begin{table}[htbp]
 \centering
-\caption{Structural FRQI preparation metrics (transpiled, optimization level~3, unconstrained topology).\label{tab:struct-csv}}
+\caption{Structural FRQI preparation metrics (transpiled, optimization level~3, unconstrained topology).}
+\label{tab:struct-csv}
 \scriptsize
 \begin{tabular}{@{}lrrlrrr@{}}
 \toprule
@@ -156,10 +156,11 @@ test\_16x16 & 16 & 8 & struct\_vchain & 16 & 29435 & 11663 \\
 \end{tabular}
 \end{table}
 
+Table~\ref{tab:struct-csv} mirrors \texttt{outputs/frqi\_structural\_metrics.csv} for auditability. Values follow the structural toolchain in \cref{ch:methods}; rows labelled \texttt{struct\_naive\_full} exist only for $4\times 4$ because full naive transpilation becomes unwieldy at larger $m$.
+
 The scaled naive rows intentionally ignore global optimizations across pixels; they isolate the multi-controlled skeleton cost as discussed in \texttt{thesis/design/resource\_and\_complexity.md}. Comparing them to v-chain totals therefore answers an engineering order-of-magnitude question rather than claiming optimality of either compiled circuit.
 
-\chapter{Simulator wall-clock excerpt ($4\times4$ and $8\times8$)}
-Table~\ref{tab:wallclock} records representative \texttt{wall\_s} fields from \texttt{thesis/generated/tables.md} for the noisy FRQI sweep (density-matrix method, optimization level~0 per manifest). Times vary with CPU thermal state; the point is order-of-magnitude feasibility on a workstation, not a reproducible benchmark.
+\chapter{Simulator wall-clock excerpt \texorpdfstring{($4\times4$ and $8\times8$)}{(4x4 and 8x8)}}
 
 \begin{table}[htbp]
 \centering
@@ -181,6 +182,8 @@ test\_8x8 & vchain & 0.20 & 54.81 & 12 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+Table~\ref{tab:wallclock} records representative \texttt{wall\_s} fields from \texttt{thesis/generated/tables.md} for the noisy FRQI sweep (density-matrix method, optimization level~0 per manifest). Times vary with CPU thermal state; the point is order-of-magnitude feasibility on a workstation, not a reproducible benchmark.
 
 At $8\times8$, v-chain circuits are wider; even with fewer CX than naive after transpilation, scheduling a larger Hilbert space can increase wall time for density-matrix evolution. Interpreting wall-clock alongside CX therefore matters for lab scheduling, not only for asymptotic counts.
 

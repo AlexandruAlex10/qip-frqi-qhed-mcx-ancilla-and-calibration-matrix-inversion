@@ -54,7 +54,7 @@ From `thesis/bachelors_en/`, build with MiKTeX or TeX Live:
 
 ```powershell
 pdflatex -interaction=nonstopmode main.tex
-bibtex main
+biber main
 pdflatex -interaction=nonstopmode main.tex
 pdflatex -interaction=nonstopmode main.tex
 ```
@@ -65,7 +65,7 @@ Or from the repo root:
 powershell -ExecutionPolicy Bypass -File scripts\build_thesis.ps1
 ```
 
-`main.tex` uses **Latin Modern** instead of the template Nimbus fonts for portable installs, and **hyperref** is commented out when a minimal MiKTeX lacks its dependency tree; re-enable `\usepackage{hyperref}` and `\usepackage{csquotes}` locally for PDF links and full babel/biblatex integration.
+`main.tex` loads **hyperref** and **csquotes** (with **cleveref** after hyperref) for PDF links and biblatex integration, uses **Latin Modern** instead of the template Nimbus fonts for portable installs, and uses the **biber** backend for `biblatex` (run `biber main` between the first and second `pdflatex` passes). If you must use the legacy BibTeX backend instead, change `backend=biber` to `backend=bibtex` in `main.tex` and run `bibtex main` in place of `biber main`.
 
 ## Thesis results ingestion
 

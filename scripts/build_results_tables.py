@@ -324,11 +324,10 @@ def _df_to_markdown(df: pd.DataFrame, *, max_rows: int | None = None) -> str:
 
 
 def _df_to_latex(df: pd.DataFrame, caption: str, label: str, *, float_spec: str = "htbp") -> str:
-    # escape underscores for latex caption/label only; pandas to_latex escapes cell content
+    # Escape underscores in the visible caption; keep \label{} as a plain ASCII key (no \_).
     cap = caption.replace("_", r"\_")
-    lab = label.replace("_", r"\_")
     body = df.to_latex(index=False, float_format="%.4g", escape=True)
-    return f"% auto-generated\n\\begin{{table}}[{float_spec}]\n\\centering\n\\caption{{{cap}}}\n\\label{{{lab}}}\n{body}\\end{{table}}\n"
+    return f"% auto-generated\n\\begin{{table}}[{float_spec}]\n\\centering\n\\caption{{{cap}}}\n\\label{{{label}}}\n{body}\\end{{table}}\n"
 
 
 def _write_bachelors_tex_fragment(repo_root: Path, filename: str, tex: str) -> None:
