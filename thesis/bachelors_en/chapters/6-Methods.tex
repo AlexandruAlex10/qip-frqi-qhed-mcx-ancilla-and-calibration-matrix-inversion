@@ -173,7 +173,6 @@ Density-matrix simulation cost scales as $O(4^{n_q})$ in the worst case~\cite{Ni
 
 \section{Repository map: modules and driver scripts}
 \label{sec:repo-map}
-\Cref{tab:repo-map} ties the mathematical objects in this chapter to Python modules and the scripts that produced the frozen CSV/PNG artifacts under \path{outputs/}. Structural transpiles use optimization level~3 (\path{frqi_structural_resources.py}); the noisy bundles in \path{thesis/results_configuration.md} use optimization level~0 for fair naive--v-chain comparisons.
 
 \begin{table}[H]
 \centering
@@ -193,6 +192,8 @@ Readout matrix inversion demo & (design in \path{thesis/design/}) & \texttt{read
 \bottomrule
 \end{tabular}
 \end{table}
+
+\Cref{tab:repo-map} ties the mathematical objects in this chapter to Python modules and the scripts that produced the frozen CSV/PNG artifacts under \path{outputs/}. Structural transpiles use optimization level~3 (\path{frqi_structural_resources.py}); the noisy bundles in \path{thesis/results_configuration.md} use optimization level~0 for fair naive--v-chain comparisons.
 
 \section{Computational workflow and software architecture}
 Experiments are orchestrated as Python scripts that write CSV outputs and PNG figures under \texttt{outputs/}. The thesis ingestion script (\texttt{build\_results\_tables.py}) validates column contracts, compares CSV modification times to manifest timestamps, and emits Markdown and \LaTeX{} fragments under \texttt{thesis/generated/}. Committed excerpts under \texttt{thesis/bachelors\_en/generated/} keep the PDF buildable even when gitignored generated files are absent on a fresh clone.

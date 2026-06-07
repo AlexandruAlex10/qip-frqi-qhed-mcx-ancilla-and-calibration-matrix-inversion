@@ -67,6 +67,30 @@ powershell -ExecutionPolicy Bypass -File scripts\build_thesis.ps1
 
 `main.tex` loads **hyperref** and **csquotes** (with **cleveref** after hyperref) for PDF links and biblatex integration, uses **Latin Modern** instead of the template Nimbus fonts for portable installs, and uses the **biber** backend for `biblatex` (run `biber main` between the first and second `pdflatex` passes). If you must use the legacy BibTeX backend instead, change `backend=biber` to `backend=bibtex` in `main.tex` and run `bibtex main` in place of `biber main`.
 
+Methods figures `toy_naive_vs_vchain.pdf` and `block_frqi_prep.pdf` live under `thesis/design/figures/`; if they are missing, run `python scripts/toy_and_block_level_diagrams.py` before building.
+
+## Defence slides (Beamer)
+
+Source lives under [`slides/main.tex`](slides/main.tex). Figures are loaded from `slides/assets/` (not committed if absent). After generating plots and diagrams, sync copies from `outputs/` and `thesis/design/figures/`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\sync_slide_assets.ps1
+```
+
+Then build from `slides/` with two `pdflatex` passes so references settle:
+
+```powershell
+cd slides
+pdflatex -interaction=nonstopmode main.tex
+pdflatex -interaction=nonstopmode main.tex
+```
+
+Speaker notes use Beamer's `\note{...}` (open the PDF in a notes-capable viewer, or use two screens). Backup frames after the thank-you slide list the thesis Appendix~B script order.
+
+## License
+
+The repository is licensed under the [MIT License](LICENSE).
+
 ## Thesis results ingestion
 
 The `outputs/` contract is documented in `thesis/outputs_registry.md` (see `thesis/results_bundle.yaml` for the loader). After you populate `outputs/` with CSVs and manifests, run:
