@@ -331,8 +331,8 @@ def _df_to_latex(df: pd.DataFrame, caption: str, label: str, *, float_spec: str 
 
 
 def _write_bachelors_tex_fragment(repo_root: Path, filename: str, tex: str) -> None:
-    """Mirror key tables into thesis/bachelors_en/generated for stable \\input{} from the PDF."""
-    dest = repo_root / "thesis" / "bachelors_en" / "generated" / filename
+    """Mirror key tables into thesis/masters_en/generated for stable \\input{} from the PDF."""
+    dest = repo_root / "thesis" / "masters_en" / "generated" / filename
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(tex.rstrip() + "\n", encoding="utf-8")
 

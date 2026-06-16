@@ -11,6 +11,31 @@
 \usepackage{multirow}
 \usepackage{booktabs}
 \usepackage{listings}
+% Robust, breakable inline references to source code "file::function"
+% identifiers. \detokenize prints underscores, slashes, dots, and "::"
+% literally and works in moving arguments (captions / list-of-tables).
+% An \allowbreak is inserted after each path/identifier separator so long
+% names wrap inside narrow table columns and do not stretch interword
+% spaces in justified text. Named \srccode to avoid clashing with the
+% "code" (Snippet) float in components/Format.tex (\newfloat{code}).
+\makeatletter
+\edef\srccode@slash{\detokenize{/}}
+\edef\srccode@dot{\detokenize{.}}
+\edef\srccode@colon{\detokenize{:}}
+\edef\srccode@under{\detokenize{_}}
+\newcommand{\srccode@scan}[1]{%
+  \@tfor\srccode@c:=#1\do{%
+    \srccode@c
+    \ifx\srccode@c\srccode@slash\allowbreak\fi
+    \ifx\srccode@c\srccode@dot\allowbreak\fi
+    \ifx\srccode@c\srccode@colon\allowbreak\fi
+    \ifx\srccode@c\srccode@under\allowbreak\fi
+  }%
+}
+\DeclareRobustCommand{\srccode}[1]{%
+  \texttt{\expandafter\srccode@scan\expandafter{\detokenize{#1}}}%
+}
+\makeatother
 \usepackage{xcolor}
 \usepackage{url}
 \usepackage{float}
@@ -32,6 +57,12 @@
 % Load after biblatex; cleveref must follow hyperref (see cleveref manual).
 \usepackage{hyperref}
 \usepackage{cleveref}
+
+% Keep every figure anchored to its surrounding text: a FloatBarrier is
+% appended automatically after each figure (current and future) so floats
+% cannot drift past the point where they are introduced.
+\usepackage{etoolbox}
+\AfterEndEnvironment{figure}{\FloatBarrier}
 
 \input{customs}
 \input{components/Format}
@@ -55,11 +86,13 @@
 \include{chapters/6-Methods}
 \include{chapters/7-Results}
 \include{chapters/8-Conclusions}
+\include{chapters/10-AIToolsDeclaration}
 
-\printbibliography[heading=bibnumbered]
-
+% Ghid structure order: appendices (h) -> bibliography (i) -> declaration (j).
 \appendix
 \include{chapters/9-Appendices}
+
+\printbibliography[heading=bibintoc]
 
 \includepdf[pages={1}]{\declarationPath}
 

@@ -48,9 +48,9 @@ pytest
 
 ## Thesis (LaTeX)
 
-The UPT English template lives under `thesis/bachelors_en/`. Chapters: **Introduction** (`chapters/4-Introduction.tex`), **State of the art and theoretical background** (`chapters/5-RelatedWork.tex`), **Methods and experimental setup** (`chapters/6-Methods.tex`), **Results** (`chapters/7-Results.tex`), **Conclusions** (`chapters/8-Conclusions.tex`), **Appendices** (`chapters/9-Appendices.tex`), plus abstracts and `customs.tex`. Numeric tables are split under `thesis/bachelors_en/generated/results_table_*.tex` (one fragment per Results section); `results_tables.tex` bundles structural, encoding, and readout for convenience. Sync encoding/structural/readout fragments from `thesis/generated/tables.tex` after `build_results_tables.py` if numbers change; the script auto-refreshes `results_table_noisy_edges_excerpt.tex` and `results_tables.tex`.
+The UPT English template lives under `thesis/masters_en/`. Chapters: **Introduction** (`chapters/4-Introduction.tex`), **State of the art and theoretical background** (`chapters/5-RelatedWork.tex`), **Methods and experimental setup** (`chapters/6-Methods.tex`), **Results** (`chapters/7-Results.tex`), **Conclusions** (`chapters/8-Conclusions.tex`), **Appendices** (`chapters/9-Appendices.tex`), plus abstracts and `customs.tex`. Numeric tables are split under `thesis/masters_en/generated/results_table_*.tex` (one fragment per Results section); `results_tables.tex` bundles structural, encoding, and readout for convenience. Sync encoding/structural/readout fragments from `thesis/generated/tables.tex` after `build_results_tables.py` if numbers change; the script auto-refreshes `results_table_noisy_edges_excerpt.tex` and `results_tables.tex`.
 
-From `thesis/bachelors_en/`, build with MiKTeX or TeX Live:
+From `thesis/masters_en/`, build with MiKTeX or TeX Live:
 
 ```powershell
 pdflatex -interaction=nonstopmode main.tex
@@ -99,7 +99,7 @@ The `outputs/` contract is documented in `thesis/outputs_registry.md` (see `thes
 python scripts\build_results_tables.py
 ```
 
-This validates required columns, warns when CSV timestamps disagree with linked `experiment_manifest_*.json` (use `--strict` to fail on those checks and on missing `expected_figures`), and writes Markdown/LaTeX fragments plus plots under `thesis/generated/` (gitignored). It also writes `thesis/bachelors_en/generated/results_table_noisy_edges_excerpt.tex` and refreshes `results_tables.tex`. Use `--require-figures` if PNGs under `outputs/` must exist before building the thesis.
+This validates required columns, warns when CSV timestamps disagree with linked `experiment_manifest_*.json` (use `--strict` to fail on those checks and on missing `expected_figures`), and writes Markdown/LaTeX fragments plus plots under `thesis/generated/` (gitignored). It also writes `thesis/masters_en/generated/results_table_noisy_edges_excerpt.tex` and refreshes `results_tables.tex`. Use `--require-figures` if PNGs under `outputs/` must exist before building the thesis.
 
 
 ## Run demos

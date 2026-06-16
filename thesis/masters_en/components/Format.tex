@@ -50,6 +50,12 @@
 \tolerance=2000 
 \emergencystretch=10pt
 
+% Allow long file paths typeset with \path{} to break at underscores and dots,
+% so script names in narrow table columns do not overflow the line.
+\makeatletter
+\g@addto@macro\UrlBreaks{\do\_\do\.}
+\makeatother
+
 %\floatstyle{}
 \newfloat{code}{h}{loc}[chapter]
 

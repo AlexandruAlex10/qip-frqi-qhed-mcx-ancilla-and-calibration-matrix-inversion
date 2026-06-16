@@ -1,0 +1,29 @@
+\chapter{Introduction}\label{ch:introduction}
+\thispagestyle{pagestyle}
+
+\section{Motivation}
+Quantum computing is moving from textbook algorithms toward concrete uses in signal and image processing~\cite{Ruan2021OpportunitiesChallenges,Wang2022ReviewQIP,Farooq2025SystematicReview}. The idea is appealing: encode an image in the state of a small qubit register, then run filtering, segmentation, or edge detection as quantum operations~\cite{Le2011FRQI,Yao2017QHED}. On current hardware the appeal meets a wall. Noisy intermediate-scale quantum (NISQ) devices have few qubits, short coherence times, and noticeable gate and readout errors, so circuit depth and two-qubit gate count decide whether a pipeline runs at all---long before any asymptotic speedup could matter~\cite{Preskill2018NISQ,Geng2022HybridNISQEdge,Geng2023ImprovedFRQI}.
+
+This thesis studies one concrete pipeline end to end: the flexible representation of quantum images (FRQI)~\cite{Le2011FRQI} followed by the quantum Hadamard edge detector (QHED)~\cite{Yao2017QHED,QiskitTextbookQuantumEdgeDetection}. FRQI is a natural test case because its state preparation is dominated by multi-controlled gates, which are exactly the operations that inflate depth and CX count on NISQ devices. \Cref{ch:related} defines these terms and reviews the surrounding literature.
+
+\section{Problem and research question}
+FRQI stores each grayscale intensity in a rotation angle on one \emph{color} qubit, addressed by a \emph{position} register of $m = 2\log_2 N$ qubits for an $N\times N$ image~\cite{Le2011FRQI,Iliyasu2013FRQIroadmap}. Preparing the state means looping over pixel addresses and applying a multi-controlled rotation for each one. The cost of that loop depends entirely on how the multi-controlled gates are synthesized, and modern synthesis work shows that ancilla-assisted decompositions can cut CX depth substantially~\cite{Vale2023MCSU2,Azevedo2024LowDepthMCG,Arsoski2024MCXQFT,Zindorf2024EfficientMCG}.
+
+The research question is deliberately narrow. It is \emph{not} a new edge operator. It is: \textbf{when the only change is the multi-controlled synthesis used to prepare the same FRQI state, how do transpiled resources and noise robustness change, and does any resource saving carry through to the edge-detection result?} To keep the comparison honest, QHED and its classical Sobel reference are held fixed; only the preparation circuit and its noise channel vary. A small readout-mitigation slice is added on the color qubit because readout error biases the inferred intensities and is a standard concern on real devices~\cite{Mu2025GuidedImageFiltering}.
+
+Prior quantum edge-detection work usually assumes ideal preparation or studies NEQR-based Sobel variants~\cite{Zhang2013NEQR,Zhang2015QSobel,Fan2019SobelNEQR,Chetia2021ImprovedSobelNEQR}. Few studies compare naive against ancilla-assisted FRQI preparation on identical noise grids while keeping the downstream stage fixed. \Cref{ch:related} positions the present work against that gap.
+
+\section{Contributions}
+This thesis makes three empirical contributions and, most importantly, one methodological contribution. All of them are backed by reproducible scripts and CSV manifests in the project repository.
+\begin{enumerate}
+  \item A \textbf{structural comparison} of naive (\texttt{noancilla}) versus v-chain (ancilla-assisted) multi-controlled FRQI preparation, reporting transpiled qubit count, depth, and CX for $4\times 4$, $8\times 8$, and $16\times 16$ images, with explicit scaling estimates where full naive transpilation is infeasible.
+  \item A \textbf{noisy-simulator robustness study} that reconstructs FRQI states under depolarizing noise, runs QHED, and reports PSNR, SSIM, fidelity, and edge metrics for both layouts on matched noise grids.
+  \item A \textbf{readout-mitigation proof of concept} that estimates a $2\times 2$ confusion matrix for the color qubit, inverts it with regularization, and compares raw versus mitigated $p_1$ across random seeds on a $4\times 4$ slice.
+  \item \textbf{(Main contribution) A comparative methodology for NISQ image pipelines:} hold the downstream operator fixed, vary only the preparation synthesis, and report resources, fidelity proxies, and edge-centric metrics \emph{together}. This prevents a single gate-count headline from hiding an inconclusive application result---the central lesson of the study.
+\end{enumerate}
+
+\section{Scope and limitations}
+All experiments use \textbf{simulators only} (Qiskit Aer statevector or density-matrix backends, with optional mock NISQ noise). No IBM Quantum hardware runs are included. Images are limited to $4\times 4$, $8\times 8$, and $16\times 16$ grayscale test patterns. Density-matrix simulation of the full $16\times 16$ v-chain register (16~qubits) is often skipped to respect memory limits (insufficient RAM); \Cref{ch:results} marks where v-chain data is missing. The statistical tests between naive and v-chain are reported as \textbf{exploratory} and must not be read as definitive superiority claims.
+
+\section{Thesis outline}
+\Cref{ch:related} introduces quantum-computing essentials, classical image and edge metrics, quantum image representations, edge-detection literature, NISQ constraints, multi-controlled synthesis, and readout mitigation, then positions this work. \Cref{ch:methods} formalizes the FRQI/QHED pipeline, the structural preparation modes, the noise model, metrics, statistics, and the experimental setup. \Cref{ch:results} presents the figures, tables, and interpretation. \Cref{ch:conclusions} summarizes the contributions, implications, and future work. The appendices collect symbols, a reproduction checklist, the relocated repository and architecture notes, and extended tables.

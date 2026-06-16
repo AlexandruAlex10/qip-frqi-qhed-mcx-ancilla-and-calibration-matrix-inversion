@@ -1,10 +1,11 @@
-% Defence deck (~12--15 minutes). Build: pdflatex main.tex (twice) from this folder.
+% Defence deck (~10 minutes). Build: pdflatex main.tex (twice) from this folder.
 \documentclass[aspectratio=169,11pt,english]{beamer}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{amsmath,amssymb}
+\usepackage{braket}
 \usepackage{babel}
 
 \graphicspath{{assets/}{../outputs/}{../thesis/design/figures/}}
@@ -26,32 +27,40 @@
   \note{Introduce yourself; state that the work is simulator-based FRQI + QHED with a controlled comparison of MCX synthesis modes.}
 \end{frame}
 
-\begin{frame}{Problem}
+\begin{frame}{Motivation and problem}
   \begin{itemize}
-    \item Quantum image pipelines (here: FRQI encoding + QHED) must fit NISQ budgets: depth, CX count, measurement bias.
-    \item Multi-controlled address logic dominates FRQI preparation; Qiskit offers different \texttt{MCXGate} synthesis modes (\texttt{noancilla} vs \texttt{v-chain}).
-    \item \textbf{Question:} Does switching preparation structure improve \emph{both} resources and application-style scores under matched noise?
+    \item Quantum image pipelines (here: FRQI encoding + QHED edge detection) could help, but must fit NISQ budgets: depth, CX count, measurement bias.
+    \item In FRQI, multi-controlled address logic dominates preparation. Qiskit offers different \texttt{MCXGate} synthesis modes: \texttt{noancilla} (naive) vs \texttt{v-chain}.
+    \item \textbf{Question:} when \emph{only} the preparation synthesis changes for the \emph{same} FRQI state, do both resources \emph{and} application-style scores improve under matched noise?
   \end{itemize}
-  \note{Emphasize this is an engineering trade-off study, not a new edge operator.}
+  \note{Emphasize this is an engineering trade-off study, not a new edge operator. The same logical state is prepared two ways; everything downstream is held fixed.}
+\end{frame}
+
+\begin{frame}{Contributions}
+  \begin{itemize}
+    \item \textbf{Empirical:} structural CX/depth comparison (naive vs v-chain), a noisy-simulator robustness study, and a $2\times2$ readout-mitigation proof of concept.
+    \item \textbf{Main (methodological):} a transparent recipe that reports \emph{resources, fidelity, and edge scores together} on one grid -- so a gate-count headline cannot hide an inconclusive application result.
+  \end{itemize}
+  \note{Lead with the contribution. The methodological recipe is the part that generalizes beyond FRQI/QHED. All claims tie to versioned CSV manifests and Python scripts in the repo.}
 \end{frame}
 
 \begin{frame}{Pipeline (fixed downstream)}
   \begin{itemize}
     \item \textbf{FRQI:} intensities as $R_y$ angles on a color qubit indexed by an address register ($m=2\log_2 N$ qubits).
     \item \textbf{QHED:} FWHT-style stage + classical Sobel scoring on decoded rasters (from \texttt{src/qhed.py}).
-    \item \textbf{Compared:} \texttt{MCXGate} \texttt{noancilla} (naive) vs \texttt{v-chain} ancilla pattern; same logical state, same QHED code path.
+    \item \textbf{Compared:} \texttt{MCXGate} \texttt{noancilla} (naive) vs \texttt{v-chain}; same logical state, same QHED code path.
+    \item \textbf{Flow:} decode $\rho \rightarrow$ raster $\rightarrow$ FWHT $\rightarrow$ magnitude $\rightarrow$ inverse $\rightarrow$ compare to Sobel reference.
   \end{itemize}
-  \note{Stress that QHED is held constant so differences isolate preparation. Qiskit names: naive maps to noancilla decomposition; v-chain is the ancilla ladder synthesis.}
+  \note{Stress that QHED is held constant so differences isolate preparation. Qiskit names: naive maps to noancilla decomposition; v-chain is the ancilla ladder synthesis. Implementation: src/frqi.py, src/improved.py, src/qhed.py, src/metrics.py.}
 \end{frame}
 
-\begin{frame}{Where it lives in the repo}
+\begin{frame}{MCX in FRQI: how it works}
   \begin{itemize}
-    \item \textbf{Encoding / QHED / metrics:} \texttt{src/frqi.py}, \texttt{src/qhed.py}, \texttt{src/metrics.py}
-    \item \textbf{Structural (naive vs v-chain) circuits:} \texttt{src/improved.py} + driver \texttt{scripts/frqi\_structural\_resources.py}
-    \item \textbf{Noise + edges + readout studies:} \texttt{scripts/noisy\_frqi\_sweep.py}, \texttt{scripts/noisy\_recon\_qhed\_edge\_metrics.py}, \texttt{scripts/readout\_mitigation\_shot\_sweep.py}
-    \item \textbf{Repro bundle $\rightarrow$ thesis tables:} \texttt{scripts/build\_results\_tables.py} (see thesis Appendix~B).
+    \item \textbf{Multi-controlled NOT (MCX):} flips its target \emph{only} when \emph{all} control qubits are $\ket{1}$ -- a controlled-NOT with many controls.
+    \item \textbf{Role here:} controls are the address bits, so MCX \emph{selects one pixel address} out of the superposition; one pixel iteration is \textbf{match $\rightarrow$ rotate color qubit $\rightarrow$ uncompute}.
+    \item \textbf{\texttt{noancilla} vs \texttt{v-chain}:} same logical gate, different compiler decomposition -- naive stays narrow but explodes in CX; v-chain borrows helper qubits (ancillas) to cut CX.
   \end{itemize}
-  \note{Supervisor feedback: tie claims to concrete modules so examiners see the implementation is inspectable.}
+  \note{Define MCX plainly: fires only when every control is 1. In FRQI the position qubits are the controls, so the gate picks out exactly the address being encoded; X gates around it convert a 0-bit pattern into the all-ones pattern it recognizes. v-chain detail (for questions): a Toffoli-like ladder writes the ``all ones?'' answer into an ancilla, one controlled R_y fires on that flag, then the ladder is reversed to reset the ancilla. About m-2 ancillas, reused across all pixels. Trade: a few extra qubits buy far fewer CX, which is what hurts under noise.}
 \end{frame}
 
 \begin{frame}{Naive vs v-chain (toy view)}
@@ -60,32 +69,26 @@
   \end{center}
   \vspace{-0.35cm}
   {\footnotesize Repository figure: \texttt{thesis/design/figures/} (script \texttt{toy\_and\_block\_level\_diagrams.py}).}
-  \note{Left: conceptual single box; right: ancilla ladder + uncompute pattern repeated per pixel in full FRQI.}
+  \note{Left: conceptual single box; right: ancilla ladder + uncompute pattern repeated per pixel in full FRQI. Block-level and transpiled-stub diagrams are in the backup slides.}
 \end{frame}
 
-\begin{frame}{Sequential preparation (block view)}
-  \begin{center}
-    \includegraphics[width=0.85\linewidth,height=0.52\textheight,keepaspectratio]{block_frqi_prep.pdf}
-  \end{center}
-  \note{Walk through init H on addresses, loop compare--rotate--uncompute, transpile to \{cx,rz,sx\}.}
-\end{frame}
-
-\begin{frame}{Minimal transpiled MCX stub}
-  \begin{center}
-    \includegraphics[width=0.88\linewidth,height=0.48\textheight,keepaspectratio]{stub_mcx_vchain.png}
-  \end{center}
-  {\footnotesize Qiskit transpile preview (\texttt{scripts/qiskit\_stub\_draw.py}).}
-  \note{Concrete reminder that ``MCX mode'' is not abstract---it becomes many CX layers after transpilation.}
-\end{frame}
-
-\begin{frame}{What we measure}
+\begin{frame}{What is measured}
   \begin{itemize}
     \item \textbf{Resources:} qubits, depth, CX after transpilation (structural study at optimization level~3).
     \item \textbf{Noise:} depolarizing density-matrix sweeps; PSNR, SSIM, fidelity (frozen bundles at optimization level~0).
     \item \textbf{Edges:} QHED vs Sobel SSIM on noisy reconstructions (paired naive vs v-chain rows).
     \item \textbf{Readout:} $2\times2$ confusion matrix inversion slice on $4\times4$ (proof of concept).
   \end{itemize}
-  \note{Mention manifests in outputs/ and thesis/results\_configuration.md for reproducibility.}
+  \note{Mention manifests in outputs/ and thesis/results\_configuration.md for reproducibility. The point of reporting all four families is the methodological contribution.}
+\end{frame}
+
+\begin{frame}{Ideal encoding \& QHED vs Sobel}
+  \begin{itemize}
+    \item \textbf{Encoding is lossless} in simulation: FRQI reconstruction reaches SSIM $=1$ at every test size.
+    \item \textbf{QHED vs classical Sobel} agrees at $4\times4$ but diverges as resolution grows: SSIM $\approx0.16$ at $8\times8$, $\approx0.01$ at $16\times16$.
+    \item This is \emph{by design} -- QHED is a Walsh--Hadamard contrast stage, not a Sobel gradient clone -- not an encoding error.
+  \end{itemize}
+  \note{Noiseless reference point (experiment E1). Because QHED and Sobel differ structurally, edge SSIM is read as a \emph{relative} indicator across preparation modes, not an absolute quality score---this framing matters for the noisy edge results later.}
 \end{frame}
 
 \begin{frame}{Structural resources vs image size}
@@ -101,30 +104,45 @@
       {\scriptsize Transpiled depth}
     \end{column}
   \end{columns}
-  \note{Headline: at $16\times16$, v-chain $\approx$11.6k CX vs scaled naive $\approx$114k CX (thesis Results). V-chain uses more qubits but fewer CX layers; DM runtime can still dominate at larger $n$.}
+  \vspace{0.2cm}
+  {\footnotesize \textbf{Takeaway:} $\sim$10$\times$ fewer CX (v-chain $\approx$11.6k vs scaled naive $\approx$114k at $16\times16$), at the cost of more qubits.}
+  \note{Headline resource result: at $16\times16$, v-chain $\approx$11.6k CX vs scaled naive $\approx$114k CX (thesis Results), roughly tenfold. V-chain uses more qubits but fewer CX layers; DM runtime can still dominate at larger $n$.}
 \end{frame}
 
 \begin{frame}{Noisy FRQI ($4\times4$ example)}
   \begin{center}
     \includegraphics[width=0.88\linewidth]{noisy_frqi_test_4x4_curves.png}
   \end{center}
+  \vspace{-0.1cm}
+  {\footnotesize Curves can cross: naive and v-chain accumulate noise differently -- CX count alone does not predict quality.}
   \note{Curves can cross---different entanglement patterns accumulate noise differently; do not read only CX.}
+\end{frame}
+
+\begin{frame}{The key result: edges do not follow CX}
+  \begin{itemize}
+    \item Edge SSIM (QHED on noisy reconstruction vs Sobel on the clean original) is the headline application endpoint.
+    \item Across eight paired noise cells, the median $\Delta$ (v-chain$-$naive) is \emph{negative}; exploratory Wilcoxon $p\approx0.078$.
+    \item So the large CX saving does \textbf{not} translate into better edge maps under this noise grid.
+  \end{itemize}
+  \note{This is the crux: a resource win that does not carry through to the application. Edge SSIM couples FRQI noise, decoding, QHED nonlinearity, and Sobel mismatch. Exactly why resources and application metrics are reported together.}
 \end{frame}
 
 \begin{frame}{Readout mitigation (synthetic)}
   \begin{center}
     \includegraphics[width=0.72\linewidth]{readout_mitigation_shot_sweep.png}
   \end{center}
-  \note{Shows systematic shift in inferred $p_1$ across seeds on a toy confusion model; separate from depolarizing DM study.}
+  \vspace{-0.1cm}
+  {\footnotesize Systematic shift: mean $\Delta p_1 \approx -0.015$, paired $p \approx 0.002$ across 10 seeds (proof of concept).}
+  \note{Shows a systematic shift in inferred $p_1$ across seeds on a toy confusion model (mean $\Delta\approx-0.015$, $p\approx0.002$); separate from the depolarizing DM study.}
 \end{frame}
 
 \begin{frame}{Main takeaway}
   \begin{itemize}
     \item V-chain can \textbf{substantially reduce} transpiled CX/depth for the same FRQI state at larger $N$.
     \item Under the thesis noise grid, \textbf{edge SSIM does not} show a significant naive$\rightarrow$v-chain win (exploratory Wilcoxon $p\approx0.078$ on eight paired noise cells).
-    \item \textbf{Lesson:} report resources \emph{and} application metrics; gate-count reductions are not automatic image wins on NISQ-style models.
+    \item \textbf{Contribution / lesson:} report resources \emph{and} application metrics together; gate-count reductions are not automatic image wins on NISQ-style models.
   \end{itemize}
-  \note{Honest limitation: simulator only; 16$\times$16 v-chain DM often skipped; scaled naive extrapolates one slice.}
+  \note{Honest limitation: simulator only; 16$\times$16 v-chain DM often skipped; scaled naive extrapolates one slice. Close by restating the methodological contribution.}
 \end{frame}
 
 \begin{frame}{Limitations \& future work}
@@ -144,6 +162,31 @@
 \end{frame}
 
 \appendix
+
+\begin{frame}{Backup: where it lives in the repo}
+  \begin{itemize}
+    \item \textbf{Encoding / QHED / metrics:} \texttt{src/frqi.py}, \texttt{src/qhed.py}, \texttt{src/metrics.py}
+    \item \textbf{Structural (naive vs v-chain) circuits:} \texttt{src/improved.py} + driver \texttt{scripts/frqi\_structural\_resources.py}
+    \item \textbf{Noise + edges + readout studies:} \texttt{scripts/noisy\_frqi\_sweep.py}, \texttt{scripts/noisy\_recon\_qhed\_edge\_metrics.py}, \texttt{scripts/readout\_mitigation\_shot\_sweep.py}
+    \item \textbf{Repro bundle $\rightarrow$ thesis tables:} \texttt{scripts/build\_results\_tables.py} (see thesis appendix on repository map).
+  \end{itemize}
+  \note{Tie claims to concrete modules so examiners see the implementation is inspectable.}
+\end{frame}
+
+\begin{frame}{Backup: sequential preparation (block view)}
+  \begin{center}
+    \includegraphics[width=0.85\linewidth,height=0.52\textheight,keepaspectratio]{block_frqi_prep.pdf}
+  \end{center}
+  \note{Walk through init H on addresses, loop compare--rotate--uncompute, transpile to \{cx,rz,sx\}.}
+\end{frame}
+
+\begin{frame}{Backup: minimal transpiled MCX stub}
+  \begin{center}
+    \includegraphics[width=0.88\linewidth,height=0.48\textheight,keepaspectratio]{stub_mcx_vchain.png}
+  \end{center}
+  {\footnotesize Qiskit transpile preview (\texttt{scripts/qiskit\_stub\_draw.py}).}
+  \note{Concrete reminder that ``MCX mode'' is not abstract---it becomes many CX layers after transpilation.}
+\end{frame}
 
 \begin{frame}{Backup: reproduction order (thesis App.~B)}
   \small

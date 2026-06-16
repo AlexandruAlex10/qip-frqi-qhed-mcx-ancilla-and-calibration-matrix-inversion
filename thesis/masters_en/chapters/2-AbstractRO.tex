@@ -1,0 +1,17 @@
+\thispagestyle{abstractpagestyle}
+
+\vspace*{36pt}
+
+\begin{center}
+\textbf{\fontsize{20pt}{24pt} \selectfont REZUMAT}
+\end{center}
+
+\vspace{24pt}
+
+Procesarea cuantică a imaginilor ar putea accelera sarcini precum filtrarea și detecția muchiilor, însă dispozitivele actuale din era NISQ (noisy intermediate-scale quantum) permit doar circuite superficiale, puțini qubiți și un zgomot considerabil. Reprezentarea FRQI (Flexible Representation of Quantum Images) stochează fiecare intensitate de pixel ca unghi de rotație pe un singur qubit de culoare, selectat de porți multi-controlate care citesc un registru de adrese. Pregătirea naivă a acestei stări, cu porți multi-controlled $X$ fără qubiți auxiliari, produce circuite adânci, cu multe porți CX după compilare.
+
+Această lucrare pune o întrebare inginerească îngustă: schimbarea doar a \emph{modului} în care sunt construite porțile multi-controlate modifică costul și robustețea la zgomot ale aceleiași stări FRQI? Se compară două moduri de sinteză -- o decompoziție fără \emph{ancilla} (naivă) și un tipar \emph{v-chain} reutilizabil care împrumută câțiva qubiți auxiliari -- pe imagini de test în tonuri de gri $4\times 4$, $8\times 8$ și $16\times 16$, folosind simulatorul Qiskit Aer. Etapa finală, detectorul cuantic de muchii Hadamard (QHED) evaluat față de o referință Sobel clasică, este menținută fixă, astfel încât orice diferență să provină numai din circuitul de pregătire. Sunt raportate împreună trei familii de măsurători: resurse transpilate (qubiți, adâncime, CX), calitatea reconstrucției sub zgomot depolarizant sintetic (PSNR, SSIM, fidelitate de stare) și acordul hărților de muchii (SSIM între QHED și Sobel). Separat, un studiu de concept corectează biasul de readout pe qubitul de culoare prin inversarea unei matrice de confuzie empirice $2\times 2$. Fiecare valoare numerică se leagă de manifeste CSV/JSON versionate și de scripturi Python din implementarea proiectului.
+
+Toate experimentele au fost executate exclusiv pe simulator (fără rulări pe hardware IBM); unele rezultate pentru imaginea de test $16\times 16$ v-chain lipsesc, din cauza memoriei RAM insuficiente de pe mașina de testare.
+
+\vfill

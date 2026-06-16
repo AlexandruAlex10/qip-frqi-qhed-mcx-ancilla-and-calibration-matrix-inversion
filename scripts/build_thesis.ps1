@@ -1,6 +1,6 @@
 # Build thesis PDF from repo root (biblatex + biber + hyperref).
 $ErrorActionPreference = "Stop"
-$thesisDir = Join-Path $PSScriptRoot ".." "thesis" "bachelors_en" | Resolve-Path
+$thesisDir = Join-Path $PSScriptRoot ".." "thesis" "masters_en" | Resolve-Path
 Push-Location $thesisDir
 try {
   pdflatex -interaction=nonstopmode main.tex
