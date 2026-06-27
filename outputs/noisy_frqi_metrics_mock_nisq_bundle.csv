@@ -1,6 +1,0 @@
-image,method,noise_mode,noise_scale,from_backend,topology,mock_backend_resolved,transpile_optimization_level,seed_transpiler,m,total_qubits,wall_s,fidelity,psnr,ssim
-test_4x4,naive,from_backend,1.0,"GenericBackendV2(linear,n=6,seed=42)",mock_backend,"GenericBackendV2(linear,n=6,seed=42)",3,,4,6,0.9260693000396714,0.031288051468908,5.845372500344105,0.0028430987734559213
-test_4x4,vchain,from_backend,1.0,"GenericBackendV2(linear,n=8,seed=42)",mock_backend,"GenericBackendV2(linear,n=8,seed=42)",3,,4,8,0.3782531000324525,0.049779752427196844,6.027183602526733,0.010802650463486642
-test_8x8,naive,from_backend,1.0,"GenericBackendV2(linear,n=8,seed=42)",mock_backend,"GenericBackendV2(linear,n=8,seed=42)",3,,6,8,17.35168479999993,0.008227274987919492,7.8827668276280605,0.0058122633651503325
-test_8x8,vchain,from_backend,1.0,"GenericBackendV2(linear,n=12,seed=42)",mock_backend,"GenericBackendV2(linear,n=12,seed=42)",3,,6,12,65.51599250000436,0.009082081075467131,7.811703489617898,0.005336778184329882
-test_16x16,naive,from_backend,1.0,"GenericBackendV2(linear,n=10,seed=42)",mock_backend,"GenericBackendV2(linear,n=10,seed=42)",3,,8,10,340.7826553999912,0.0025531285819320516,8.194616052198924,0.015115337747643422

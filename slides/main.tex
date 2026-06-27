@@ -24,6 +24,9 @@
 
 \begin{frame}
   \titlepage
+  \begin{center}
+    {\footnotesize Repository: \url{https://github.com/AlexandruAlex10/qip-frqi-qhed-mcx-ancilla-and-calibration-matrix-inversion}}
+  \end{center}
   \note{Introduce yourself; state that the work is simulator-based FRQI + QHED with a controlled comparison of MCX synthesis modes.}
 \end{frame}
 
@@ -165,6 +168,7 @@
 
 \begin{frame}{Backup: where it lives in the repo}
   \begin{itemize}
+    \item \textbf{Repository:} \url{https://github.com/AlexandruAlex10/qip-frqi-qhed-mcx-ancilla-and-calibration-matrix-inversion}
     \item \textbf{Encoding / QHED / metrics:} \texttt{src/frqi.py}, \texttt{src/qhed.py}, \texttt{src/metrics.py}
     \item \textbf{Structural (naive vs v-chain) circuits:} \texttt{src/improved.py} + driver \texttt{scripts/frqi\_structural\_resources.py}
     \item \textbf{Noise + edges + readout studies:} \texttt{scripts/noisy\_frqi\_sweep.py}, \texttt{scripts/noisy\_recon\_qhed\_edge\_metrics.py}, \texttt{scripts/readout\_mitigation\_shot\_sweep.py}

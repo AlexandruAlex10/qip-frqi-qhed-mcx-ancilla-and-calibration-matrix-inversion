@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -25,10 +26,13 @@ from src.noise_models import (
     run_readout_mitigation_slice_demo,
 )
 
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "data" / "test_images"
+
 
 @pytest.mark.parametrize("factory", [build_frqi_prep_vchain, build_frqi_prep_naive])
 def test_noisy_frqi_noiseless_density_matrix_fidelity(factory):
-    img = np.load(os.path.join("data", "test_images", "test_4x4.npy"))
+    img = np.load(DATA / "test_4x4.npy")
     m = required_position_qubits(int(img.shape[0]))
     qc = factory(img)
     total = qc.num_qubits
@@ -39,7 +43,7 @@ def test_noisy_frqi_noiseless_density_matrix_fidelity(factory):
 
 
 def test_reconstruct_from_reduced_dm_matches_statevector_rule_noiseless():
-    img = np.load(os.path.join("data", "test_images", "test_4x4.npy"))
+    img = np.load(DATA / "test_4x4.npy")
     n = int(img.shape[0])
     m = required_position_qubits(n)
     qc = build_frqi_prep_vchain(img)
@@ -51,7 +55,7 @@ def test_reconstruct_from_reduced_dm_matches_statevector_rule_noiseless():
 
 
 def test_depol_monotonic_fidelity_4x4_vchain():
-    img = np.load(os.path.join("data", "test_images", "test_4x4.npy"))
+    img = np.load(DATA / "test_4x4.npy")
     m = required_position_qubits(int(img.shape[0]))
     qc = build_frqi_prep_vchain(img)
     total = frqi_structural_num_qubits_vchain(m)
@@ -65,7 +69,7 @@ def test_depol_monotonic_fidelity_4x4_vchain():
 
 
 def test_readout_mitigation_slice_demo_smoke():
-    img = np.load(os.path.join("data", "test_images", "test_4x4.npy"))
+    img = np.load(DATA / "test_4x4.npy")
     m = required_position_qubits(int(img.shape[0]))
     nm = build_noise_model(readout_prob_01=0.06, readout_prob_10=0.06)
     raw, mit, conf, invc = run_readout_mitigation_slice_demo(

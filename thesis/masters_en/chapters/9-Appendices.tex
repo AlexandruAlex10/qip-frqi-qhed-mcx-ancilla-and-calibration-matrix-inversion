@@ -189,7 +189,7 @@ At $8\times8$, v-chain circuits are wider; even with fewer CX than naive after t
 \chapter{Repository map and software architecture}
 \label{sec:repo-map}
 
-This appendix collects the implementation-level detail that supports the method in \cref{ch:methods} but would otherwise interrupt its narrative.
+This appendix collects the implementation-level detail that supports the method in \cref{ch:methods} but would otherwise interrupt its narrative. The complete source code is available at \url{https://github.com/AlexandruAlex10/qip-frqi-qhed-mcx-ancilla-and-calibration-matrix-inversion}.
 
 \Cref{tab:repo-map} ties the mathematical objects of the methods chapter to Python modules and the scripts that produced the frozen CSV and PNG artifacts under \path{outputs/}. Structural transpiles use optimization level~3 (\path{frqi_structural_resources.py}); the noisy bundles in \path{thesis/results_configuration.md} use optimization level~0 for fair naive--v-chain comparisons.
 

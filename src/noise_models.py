@@ -1,14 +1,14 @@
-"""
-Qiskit Aer noise models and thin runners for density-matrix / shot simulation.
+"""Qiskit Aer noise models and thin runners for density-matrix / shot simulation.
 
 Also provides partial trace onto the FRQI data register (color + position),
-fidelity against the ideal FRQI reference, optional single-qubit readout
-calibration + linear inversion mitigation, and helpers for shot experiments.
+fidelity against the ideal FRQI reference, single-qubit readout calibration +
+linear-inversion mitigation, and helpers for shot experiments.
 """
 
 from __future__ import annotations
 
 import time
+from dataclasses import dataclass
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
@@ -22,6 +22,22 @@ from qiskit_aer.noise import NoiseModel as NoiseModelType
 from src.frqi import build_frqi_statevector, validate_grayscale_image
 from src.improved import frqi_structural_num_qubits_vchain
 
+__all__ = [
+    "transpile_for_aer_noise",
+    "TranspileConfig",
+    "build_noise_model",
+    "run_density_matrix",
+    "run_shots_counts",
+    "reduced_frqi_density_matrix",
+    "frqi_reduced_state_fidelity",
+    "estimate_single_qubit_readout_matrix",
+    "invert_readout_matrix",
+    "counts_to_prob_vector",
+    "mitigate_linear",
+    "run_readout_mitigation_slice_demo",
+    "noisy_frqi_metrics_row",
+]
+
 try:
     from qiskit_aer import AerSimulator
     from qiskit_aer.noise import NoiseModel, ReadoutError, depolarizing_error, thermal_relaxation_error
@@ -34,6 +50,9 @@ except Exception as exc:  # pragma: no cover
     _AER_IMPORT_ERROR = exc
 else:
     _AER_IMPORT_ERROR = None
+
+# Default Aer-friendly basis used whenever a caller does not specify one.
+_DEFAULT_BASIS_GATES: Tuple[str, ...] = ("id", "rz", "sx", "x", "cx")
 
 
 def _require_aer() -> None:
@@ -50,7 +69,7 @@ def _as_density_matrix(obj: Any) -> DensityMatrix:
 def transpile_for_aer_noise(
     qc: QuantumCircuit,
     *,
-    basis_gates: Sequence[str] = ("id", "rz", "sx", "x", "cx"),
+    basis_gates: Sequence[str] = _DEFAULT_BASIS_GATES,
     optimization_level: int = 0,
     coupling_map: Optional[Any] = None,
     backend: Optional[Any] = None,
@@ -58,17 +77,20 @@ def transpile_for_aer_noise(
     layout_method: Optional[str] = None,
     routing_method: Optional[str] = None,
 ) -> QuantumCircuit:
-    """Transpile for Aer execution.
+    """Transpile a circuit for Aer execution.
 
-    Default behavior (``backend is None`` and ``coupling_map is None``) matches the legacy
-    path: a **fully connected** :class:`~qiskit.transpiler.CouplingMap` with
-    ``layout_method="trivial"`` so logical qubit order is preserved on an all-to-all fabric.
+    The target is chosen by precedence:
 
-    If ``backend`` is provided, Qiskit's :func:`~qiskit.transpile` is called with that backend
-    (recommended for mock NISQ snapshots: coupling + basis gates + calibration-derived noise).
+    - ``backend`` set: transpile directly for that backend (coupling + basis +
+      calibration-derived noise; recommended for mock NISQ snapshots).
+    - else ``coupling_map`` set: transpile onto that topology with ``basis_gates``.
+    - else (both ``None``): the legacy path, a **fully connected** coupling map
+      with ``layout_method="trivial"`` so logical qubit order is preserved.
 
-    If ``coupling_map`` is provided (and ``backend`` is not), transpilation uses that topology
-    with ``basis_gates``; layout/routing default to Qiskit defaults unless overridden.
+    Returns
+    -------
+    QuantumCircuit
+        The transpiled circuit.
     """
     kwargs: Dict[str, Any] = {"optimization_level": int(optimization_level)}
     if seed_transpiler is not None:
@@ -77,10 +99,8 @@ def transpile_for_aer_noise(
     if backend is not None:
         return transpile(qc, backend=backend, **kwargs)
 
-    n = qc.num_qubits
     if coupling_map is None:
-        coupling = CouplingMap.from_full(n)
-        kwargs["coupling_map"] = coupling
+        kwargs["coupling_map"] = CouplingMap.from_full(qc.num_qubits)
         kwargs["basis_gates"] = list(basis_gates)
         kwargs["layout_method"] = layout_method or "trivial"
         kwargs["routing_method"] = routing_method or "basic"
@@ -93,6 +113,62 @@ def transpile_for_aer_noise(
     if routing_method is not None:
         kwargs["routing_method"] = routing_method
     return transpile(qc, **kwargs)
+
+
+@dataclass(frozen=True)
+class TranspileConfig:
+    """Bundle of transpilation options threaded through the Aer runners.
+
+    Centralizes the basis-gate default and the seven ``transpile_*`` knobs so
+    each runner builds one config instead of repeating the same kwargs.
+    """
+
+    basis_gates: Sequence[str] = _DEFAULT_BASIS_GATES
+    optimization_level: int = 0
+    coupling_map: Optional[Any] = None
+    backend: Optional[Any] = None
+    seed_transpiler: Optional[int] = None
+    layout_method: Optional[str] = None
+    routing_method: Optional[str] = None
+
+    @classmethod
+    def from_runner_kwargs(
+        cls,
+        *,
+        backend: Optional[Any] = None,
+        coupling_map: Optional[Any] = None,
+        basis_gates: Optional[Sequence[str]] = None,
+        optimization_level: int = 0,
+        seed_transpiler: Optional[int] = None,
+        layout_method: Optional[str] = None,
+        routing_method: Optional[str] = None,
+    ) -> "TranspileConfig":
+        """Build a config from a runner's ``transpile_*`` keyword arguments.
+
+        ``basis_gates is None`` falls back to :data:`_DEFAULT_BASIS_GATES`.
+        """
+        return cls(
+            basis_gates=tuple(basis_gates) if basis_gates is not None else _DEFAULT_BASIS_GATES,
+            optimization_level=int(optimization_level),
+            coupling_map=coupling_map,
+            backend=backend,
+            seed_transpiler=seed_transpiler,
+            layout_method=layout_method,
+            routing_method=routing_method,
+        )
+
+    def apply(self, qc: QuantumCircuit) -> QuantumCircuit:
+        """Transpile ``qc`` using :func:`transpile_for_aer_noise` with this config."""
+        return transpile_for_aer_noise(
+            qc,
+            basis_gates=self.basis_gates,
+            optimization_level=self.optimization_level,
+            coupling_map=self.coupling_map,
+            backend=self.backend,
+            seed_transpiler=self.seed_transpiler,
+            layout_method=self.layout_method,
+            routing_method=self.routing_method,
+        )
 
 
 def build_noise_model(
@@ -108,23 +184,21 @@ def build_noise_model(
     single_qubit_gates: Sequence[str] = ("id", "rz", "sx", "x", "h", "delay"),
     two_qubit_gates: Sequence[str] = ("cx",),
 ) -> NoiseModelType:
-    """Build a :class:`NoiseModel` with depolarizing, optional thermal relaxation, and readout.
+    """Build a :class:`NoiseModel` with depolarizing, optional thermal, and readout error.
 
-    All time parameters (``t1``, ``t2``, ``gate_time_1q``) must use the **same unit**
-    (for example microseconds); they are passed straight to Qiskit's
-    :func:`thermal_relaxation_error` on single-qubit gates. ``gate_time_2q`` is accepted for
-    API symmetry but **not** used here (two-qubit thermal is omitted; only depolarizing is
-    applied on two-qubit gates).
+    Thermal relaxation is applied on single-qubit gates only and requires
+    ``t1``, ``t2``, ``gate_time_1q`` in the **same unit**. ``gate_time_2q`` is
+    accepted for API symmetry but unused (two-qubit gates get depolarizing only).
 
-    **Readout:** ``readout_prob_01`` is :math:`P(\\mathrm{meas}=1 \\mid \\mathrm{true}=0)`,
-    ``readout_prob_10`` is :math:`P(\\mathrm{meas}=0 \\mid \\mathrm{true}=1)`.
-    Readout error is attached to every qubit index present in executed circuits.
+    Readout convention: ``readout_prob_01`` is ``P(meas=1 | true=0)`` and
+    ``readout_prob_10`` is ``P(meas=0 | true=1)``; the same single-qubit
+    confusion is attached to every qubit.
     """
     _require_aer()
     assert NoiseModel is not None and depolarizing_error is not None
     assert thermal_relaxation_error is not None and ReadoutError is not None
 
-    _ = gate_time_2q  # Reserved for callers / future two-qubit thermal modeling.
+    _ = gate_time_2q  # Reserved for future two-qubit thermal modeling.
     noise_model = NoiseModel()
     use_thermal = (
         t1 is not None
@@ -149,7 +223,6 @@ def build_noise_model(
         return out
 
     def _two_qubit_error() -> Any:
-        """Two-qubit error channel (depolarizing only; thermal on CX omitted for a simple model)."""
         if p_depol_2q <= 0:
             return None
         return depolarizing_error(p_depol_2q, 2)
@@ -167,11 +240,10 @@ def build_noise_model(
     if readout_prob_01 > 0 or readout_prob_10 > 0:
         p01 = float(np.clip(readout_prob_01, 0.0, 1.0))
         p10 = float(np.clip(readout_prob_10, 0.0, 1.0))
-        # Internal confusion is A[i,j] = P(measured=i | true=j), but Aer ReadoutError
-        # expects a row-stochastic matrix with rows corresponding to true states.
+        # Aer expects a row-stochastic matrix indexed by the true state, so we
+        # transpose our P(measured=i | true=j) confusion before handing it over.
         confusion = [[1.0 - p01, p10], [p01, 1.0 - p10]]
         ro = ReadoutError(np.asarray(confusion).T.tolist())
-        # Apply the same single-qubit readout confusion to every qubit line in Aer.
         add_ro = getattr(noise_model, "add_all_qubit_readout_error", None)
         if callable(add_ro):
             add_ro(ro)
@@ -199,17 +271,16 @@ def run_density_matrix(
     _require_aer()
     assert AerSimulator is not None
     if transpile_first:
-        bg = tuple(transpile_basis_gates) if transpile_basis_gates is not None else ("id", "rz", "sx", "x", "cx")
-        tqc = transpile_for_aer_noise(
-            qc,
-            basis_gates=bg,
-            optimization_level=int(transpile_optimization_level),
-            coupling_map=transpile_coupling_map,
+        cfg = TranspileConfig.from_runner_kwargs(
             backend=transpile_backend,
+            coupling_map=transpile_coupling_map,
+            basis_gates=transpile_basis_gates,
+            optimization_level=transpile_optimization_level,
             seed_transpiler=seed_transpiler,
             layout_method=transpile_layout_method,
             routing_method=transpile_routing_method,
         )
+        tqc = cfg.apply(qc)
     else:
         tqc = qc
     sim = AerSimulator(method="density_matrix", noise_model=noise_model)
@@ -220,8 +291,7 @@ def run_density_matrix(
         opts["seed_simulator"] = int(seed_simulator)
     job = sim.run(circ, shots=1, **opts)
     res = job.result()
-    # Qiskit 1.x: Result.data(0) or Result.data()['dm'] depending on version.
-    raw: Any
+    # Result.data(0) vs Result.data() varies across Qiskit 1.x point releases.
     try:
         raw = res.data(0)["dm"]
     except Exception:
@@ -244,21 +314,20 @@ def run_shots_counts(
     transpile_layout_method: Optional[str] = None,
     transpile_routing_method: Optional[str] = None,
 ) -> Dict[str, int]:
-    """Run ``qc`` (must include measurements) and return raw shot counts."""
+    """Run ``qc`` (which must include measurements) and return raw shot counts."""
     _require_aer()
     assert AerSimulator is not None
     if transpile_first:
-        bg = tuple(transpile_basis_gates) if transpile_basis_gates is not None else ("id", "rz", "sx", "x", "cx")
-        tqc = transpile_for_aer_noise(
-            qc,
-            basis_gates=bg,
-            optimization_level=int(transpile_optimization_level),
-            coupling_map=transpile_coupling_map,
+        cfg = TranspileConfig.from_runner_kwargs(
             backend=transpile_backend,
+            coupling_map=transpile_coupling_map,
+            basis_gates=transpile_basis_gates,
+            optimization_level=transpile_optimization_level,
             seed_transpiler=seed_transpiler,
             layout_method=transpile_layout_method,
             routing_method=transpile_routing_method,
         )
+        tqc = cfg.apply(qc)
     else:
         tqc = qc
     sim = AerSimulator(noise_model=noise_model)
@@ -270,7 +339,13 @@ def run_shots_counts(
 
 
 def reduced_frqi_density_matrix(rho: Any, m: int, total_qubits: int) -> DensityMatrix:
-    """Trace out flag + v-chain ancillas; keep qubits ``0..m`` (color + position)."""
+    """Trace out flag + v-chain ancillas, keeping qubits ``0..m`` (color + position).
+
+    Raises
+    ------
+    ValueError
+        If ``rho`` does not have ``total_qubits`` qubits.
+    """
     rho_dm = _as_density_matrix(rho)
     if rho_dm.num_qubits != total_qubits:
         raise ValueError(f"Expected {total_qubits} qubits in rho, got {rho_dm.num_qubits}.")
@@ -287,7 +362,7 @@ def frqi_reduced_state_fidelity(
     m: int,
     total_qubits: int,
 ) -> float:
-    """State fidelity of the reduced noisy state to the ideal FRQI state (data register only)."""
+    """Return the fidelity of the reduced noisy state to the ideal FRQI data register."""
     img = validate_grayscale_image(image)
     ref = DensityMatrix(build_frqi_statevector(img))
     red = reduced_frqi_density_matrix(rho_full, m, total_qubits)
@@ -309,41 +384,41 @@ def estimate_single_qubit_readout_matrix(
     transpile_layout_method: Optional[str] = None,
     transpile_routing_method: Optional[str] = None,
 ) -> np.ndarray:
-    """Empirical 2x2 readout confusion **A** with ``A[i,j] ≈ P(measured=i | true=j)``."""
+    """Estimate the 2x2 readout confusion ``A[i,j] ~= P(measured=i | true=j)``.
+
+    Prepares ``|0>`` and ``|1>`` on ``measured_qubit``, measures, and
+    column-normalizes the empirical frequencies.
+    """
     _require_aer()
     assert AerSimulator is not None
     sim = AerSimulator(noise_model=noise_model)
     opts: Dict[str, Any] = {}
     if seed_simulator is not None:
         opts["seed_simulator"] = int(seed_simulator)
+    cfg = TranspileConfig.from_runner_kwargs(
+        backend=transpile_backend,
+        coupling_map=transpile_coupling_map,
+        basis_gates=transpile_basis_gates,
+        optimization_level=transpile_optimization_level,
+        seed_transpiler=seed_transpiler,
+        layout_method=transpile_layout_method,
+        routing_method=transpile_routing_method,
+    )
 
     def _cal_prep(true_one: bool) -> QuantumCircuit:
         qc = QuantumCircuit(num_qubits, 1)
         if true_one:
             qc.x(measured_qubit)
         qc.measure(measured_qubit, 0)
-        bg = tuple(transpile_basis_gates) if transpile_basis_gates is not None else ("id", "rz", "sx", "x", "cx")
-        return transpile_for_aer_noise(
-            qc,
-            basis_gates=bg,
-            optimization_level=int(transpile_optimization_level),
-            coupling_map=transpile_coupling_map,
-            backend=transpile_backend,
-            seed_transpiler=seed_transpiler,
-            layout_method=transpile_layout_method,
-            routing_method=transpile_routing_method,
-        )
+        return cfg.apply(qc)
 
     est = np.zeros((2, 2), dtype=np.float64)
     for j, true_one in enumerate((False, True)):
         qc = _cal_prep(true_one)
         job = sim.run(qc, shots=int(shots), **opts)
         cts = job.result().get_counts()
-        p0 = int(cts.get("0", 0)) / float(shots)
-        p1 = int(cts.get("1", 0)) / float(shots)
-        est[0, j] = p0
-        est[1, j] = p1
-    # Renormalize columns to mitigate sampling noise.
+        est[0, j] = int(cts.get("0", 0)) / float(shots)
+        est[1, j] = int(cts.get("1", 0)) / float(shots)
     for j in range(2):
         col = est[:, j].sum()
         if col > 0:
@@ -352,13 +427,13 @@ def estimate_single_qubit_readout_matrix(
 
 
 def invert_readout_matrix(confusion: np.ndarray, *, rcond: float = 1e-6) -> np.ndarray:
-    """Moore–Penrose inverse of a (possibly ill-conditioned) readout confusion matrix."""
+    """Return the Moore-Penrose inverse of a readout confusion matrix."""
     mat = np.asarray(confusion, dtype=np.float64)
     return np.linalg.pinv(mat, rcond=rcond)
 
 
 def counts_to_prob_vector(counts: Mapping[str, int], num_measured: int, shots: int) -> np.ndarray:
-    """Map bitstring counts to a length-``2**num_measured`` probability vector (little-endian)."""
+    """Convert bitstring counts to a length-``2**num_measured`` probability vector (little-endian)."""
     dim = 2**num_measured
     p = np.zeros(dim, dtype=np.float64)
     for bits, n in counts.items():
@@ -368,7 +443,7 @@ def counts_to_prob_vector(counts: Mapping[str, int], num_measured: int, shots: i
 
 
 def mitigate_linear(probs: np.ndarray, inv_matrix: np.ndarray) -> np.ndarray:
-    """Apply ``inv_matrix @ probs`` and clip to a subnormalized nonnegative vector."""
+    """Apply ``inv_matrix @ probs``, then clip negatives and renormalize."""
     out = inv_matrix @ np.asarray(probs, dtype=np.float64)
     out = np.clip(out, 0.0, None)
     s = out.sum()
@@ -396,9 +471,15 @@ def run_readout_mitigation_slice_demo(
     transpile_layout_method: Optional[str] = None,
     transpile_routing_method: Optional[str] = None,
 ) -> Tuple[float, float, np.ndarray, np.ndarray]:
-    """Shot demo on :func:`src.improved.build_single_address_ry_slice`: raw vs mitigated P(color=1).
+    """Run a shot demo on a single FRQI slice: raw vs mitigated ``P(color=1)``.
 
-    Returns ``(p1_raw, p1_mitigated, confusion, inv_confusion)``.
+    Calibrates the color-qubit readout matrix, inverts it, then measures
+    :func:`src.improved.build_single_address_ry_slice` and mitigates.
+
+    Returns
+    -------
+    tuple
+        ``(p1_raw, p1_mitigated, confusion, inv_confusion)``.
     """
     from src.improved import build_single_address_ry_slice
 
@@ -426,17 +507,16 @@ def run_readout_mitigation_slice_demo(
     qc = QuantumCircuit(n, 1)
     qc.compose(base, qubits=list(range(n)), inplace=True)
     qc.measure(0, 0)
-    bg = tuple(transpile_basis_gates) if transpile_basis_gates is not None else ("id", "rz", "sx", "x", "cx")
-    tqc = transpile_for_aer_noise(
-        qc,
-        basis_gates=bg,
-        optimization_level=int(transpile_optimization_level),
-        coupling_map=transpile_coupling_map,
+    cfg = TranspileConfig.from_runner_kwargs(
         backend=transpile_backend,
+        coupling_map=transpile_coupling_map,
+        basis_gates=transpile_basis_gates,
+        optimization_level=transpile_optimization_level,
         seed_transpiler=seed_transpiler,
         layout_method=transpile_layout_method,
         routing_method=transpile_routing_method,
     )
+    tqc = cfg.apply(qc)
 
     _require_aer()
     assert AerSimulator is not None
@@ -463,10 +543,21 @@ def noisy_frqi_metrics_row(
     transpile_layout_method: Optional[str] = None,
     transpile_routing_method: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Density-matrix noisy FRQI run with PSNR/SSIM on the mixed-state reconstruction.
+    """Run a density-matrix noisy FRQI experiment and return a metrics row.
 
-    If ``return_recon`` is True, the returned mapping also contains key ``recon`` with the
-    reconstructed grayscale image (same dtype/shape as ``image``).
+    Computes fidelity to the ideal state plus PSNR/SSIM on the mixed-state
+    reconstruction. With ``return_recon=True`` the result also includes the
+    reconstructed image under key ``recon``.
+
+    Parameters
+    ----------
+    method : str
+        Either ``"vchain"`` or ``"naive"``.
+
+    Raises
+    ------
+    ValueError
+        If ``method`` is not recognized.
     """
     from src.frqi import reconstruct_image_from_reduced_density_matrix, required_position_qubits
     from src.metrics import psnr, ssim_uint8

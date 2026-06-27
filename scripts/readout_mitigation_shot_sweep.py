@@ -1,13 +1,9 @@
-"""
-Readout calibration + linear inversion mitigation on a single structural FRQI slice.
+"""Readout calibration + linear-inversion mitigation on a single structural FRQI slice.
 
-This script expands the prototype ``run_readout_mitigation_slice_demo`` into a small
-study with:
-
-- multiple simulator seeds (shot variability),
-- separate shot budgets for calibration vs data,
-- optional bootstrap confidence intervals for mitigated :math:`P(\\mathrm{meas}=1)`,
-- figures + CSV under ``outputs/`` plus an ``experiment_manifest_*.json`` sidecar.
+Expands ``run_readout_mitigation_slice_demo`` into a small study over multiple
+simulator seeds, with separate calibration/data shot budgets and optional
+bootstrap confidence bands for the mitigated ``P(meas=1)``. Writes a CSV, a
+figure, and an ``experiment_manifest_*.json`` sidecar under ``outputs/``.
 """
 
 from __future__ import annotations

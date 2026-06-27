@@ -1,12 +1,8 @@
+"""Demo: FRQI encode/reconstruct, QHED vs Sobel edge maps, and metrics.
 
-"""Demo script for FRQI, QHED, and Sobel edge detection.
-
-This script loads test images, constructs their FRQI statevectors,
-reconstructs the images from the statevectors, and computes edge maps
-using both the QHED baseline and classical Sobel method.
-It then compares the results using MSE, PSNR, and similarity metrics,
-saves comparison figures, FRQI reconstruction panels, and a CSV of metrics
-including transpiled FRQI ``initialize`` circuit resources.
+Loads the test images, builds FRQI statevectors, reconstructs them, computes
+QHED and Sobel edge maps, and writes comparison figures, reconstruction panels,
+and a CSV of MSE/PSNR/SSIM plus transpiled FRQI ``initialize`` resources.
 """
 
 from __future__ import annotations

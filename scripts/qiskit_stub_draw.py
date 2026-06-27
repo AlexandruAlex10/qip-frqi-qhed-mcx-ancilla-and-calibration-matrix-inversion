@@ -1,5 +1,4 @@
-"""
-Draws a small MCX v-chain stub circuit for figure reuse.
+"""Draw a small MCX v-chain stub circuit for figure reuse.
 
 Saves PNG to outputs/stub_mcx_vchain.png (creates outputs/ if needed).
 """

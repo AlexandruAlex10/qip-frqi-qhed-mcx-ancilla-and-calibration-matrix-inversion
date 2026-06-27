@@ -1,12 +1,12 @@
-"""
-Quantum circuit resource counts after transpilation.
-"""
+"""Quantum circuit resource counts after transpilation."""
 
 from __future__ import annotations
 
 from typing import Any, Optional
 
 from qiskit import transpile
+
+__all__ = ["transpiled_circuit_stats"]
 
 
 def transpiled_circuit_stats(
@@ -17,14 +17,15 @@ def transpiled_circuit_stats(
     backend: Optional[Any] = None,
     coupling_map: Optional[Any] = None,
 ) -> dict[str, int | float]:
-    """Transpile ``qc`` and return qubit count, depth, size, and CX count.
+    """Transpile ``qc`` and report qubit count, depth, size, CX, and single-qubit gates.
 
-    ``basis_gates`` and ``opt_level`` are passed to :func:`qiskit.transpile` when ``backend``
-    is not provided. If ``backend`` is provided, transpilation targets that backend directly
-    (coupling + basis gates from the mock snapshot).
+    The transpile target follows precedence ``backend`` > ``coupling_map`` >
+    ``basis_gates`` only. Single-qubit totals depend on the chosen basis.
 
-    Additional single-qubit totals are included for reporting (gate names depend
-    on the chosen basis).
+    Returns
+    -------
+    dict
+        Keys ``num_qubits``, ``depth``, ``size``, ``cx``, ``single_qubit_gates``.
     """
     if backend is not None:
         tqc = transpile(qc, backend=backend, optimization_level=opt_level)
@@ -40,5 +41,5 @@ def transpiled_circuit_stats(
         "depth": int(tqc.depth()),
         "size": int(tqc.size()),
         "cx": cx,
-        "single_qubit_gates": int(single)
+        "single_qubit_gates": int(single),
     }

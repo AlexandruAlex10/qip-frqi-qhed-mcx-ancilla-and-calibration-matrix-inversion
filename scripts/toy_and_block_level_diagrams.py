@@ -1,5 +1,4 @@
-"""
-Generate toy and block-level FRQI prep diagrams.
+"""Generate toy and block-level FRQI prep diagrams.
 
 Writes PDF and SVG under thesis/design/figures/ using matplotlib.
 """

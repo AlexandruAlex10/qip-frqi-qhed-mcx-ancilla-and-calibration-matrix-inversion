@@ -1,22 +1,13 @@
-"""
-Emit transpiled resource stats for structural FRQI circuits (CSV + figures).
+"""Emit transpiled resource stats for structural FRQI circuits (CSV + figures).
 
-Uses the same basis and optimization level as ``scripts/frqi_qhed_sobel.py``:
-``basis_gates = ['cx', 'rz', 'sx']``, ``optimization_level = 3``.
+Uses ``basis_gates = ['cx', 'rz', 'sx']`` and ``optimization_level = 3`` (matching
+``scripts/frqi_qhed_sobel.py``). CSV row kinds: ``struct_vchain`` (full v-chain prep),
+``struct_naive_full`` (4x4 only), ``struct_naive_slice`` (one address-0 ``cry`` slice),
+and ``struct_naive_slice_scaled`` (slice fields times ``N_pix = 2**m``).
 
-Rows include:
-- ``struct_vchain``: full :func:`src.improved.build_frqi_prep_vchain` per test image.
-- ``struct_naive_full``: full :func:`src.improved.build_frqi_prep_naive` (4×4 only; scales poorly).
-- ``struct_naive_slice``: one representative ``noancilla`` MCX + ``cry`` slice at address 0,
-  angle ``theta = pi/4`` (transpiled ``cry`` cost is angle-dependent; the MCX skeleton is shared).
-- ``struct_naive_slice_scaled``: integer fields ``depth``, ``cx``, ``size`` multiplied by
-  ``N_pix = 2**m`` for linear extrapolation (same caveat as the thesis design note).
-
-After writing ``outputs/frqi_structural_metrics.csv``, plots
-``outputs/fig_cx_vs_image_size.png`` and ``outputs/fig_depth_vs_image_size.png`` unless
-``--no-plot`` is set. ``--plot-only`` reads an existing CSV and only emits figures.
-Optional ``--emit-layout-csv`` also writes ``outputs/frqi_structural_metrics_constrained.csv``
-(linear-chain ``GenericBackendV2`` matching each circuit width; same optimization level).
+Writes ``outputs/frqi_structural_metrics.csv`` plus CX/depth figures unless
+``--no-plot``. ``--plot-only`` re-plots an existing CSV; ``--emit-layout-csv`` also
+writes a linear-chain ``GenericBackendV2`` constrained-layout CSV.
 """
 
 from __future__ import annotations

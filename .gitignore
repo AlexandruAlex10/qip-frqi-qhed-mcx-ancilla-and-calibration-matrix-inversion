@@ -311,6 +311,9 @@ TSWLatexianTemp*
 # thesis pipeline generated fragments (rebuild with scripts/build_results_tables.py)
 thesis/generated/
 
+# regenerable experiment artifacts (CSVs, manifests, figures from scripts/)
+outputs/
+
 # project implementation files
 __pycache__/
 *.pyc

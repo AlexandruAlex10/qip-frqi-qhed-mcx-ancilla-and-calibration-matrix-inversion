@@ -1,12 +1,9 @@
-"""
-Mock NISQ-style backends and YAML experiment presets (no IBM credentials).
+"""Mock NISQ-style backends and YAML experiment presets (no IBM credentials).
 
-Primary path for thesis-style evidence: :class:`~qiskit.providers.fake_provider.GenericBackendV2`
-with a **linear** coupling map and ``num_qubits`` matching the FRQI circuit, combined with
-``NoiseModel.from_backend`` so Aer uses snapshot-like gate errors and readout channels.
-
-Optional named ``Fake*V2`` backends from ``qiskit.providers.fake_provider`` are supported when
-their qubit count is sufficient for the circuit.
+The primary path for thesis evidence is a ``GenericBackendV2`` on a linear
+coupling map sized to the FRQI circuit, combined with ``NoiseModel.from_backend``
+so Aer uses snapshot-like gate and readout errors. Named ``Fake*V2`` backends are
+also supported when their qubit count is sufficient.
 """
 
 from __future__ import annotations
@@ -16,9 +13,19 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple
 
 from qiskit.transpiler import CouplingMap
 
+__all__ = [
+    "linear_coupling_edges",
+    "make_generic_linear_backend",
+    "load_named_fake_backend_v2",
+    "noise_model_from_backend",
+    "load_yaml_preset",
+    "build_noise_model_from_preset",
+    "coupling_map_from_backend",
+]
+
 
 def linear_coupling_edges(num_qubits: int) -> List[List[int]]:
-    """Undirected line as Qiskit coupling edges (both directions)."""
+    """Return a line topology as undirected Qiskit coupling edges (both directions)."""
     if num_qubits < 2:
         return []
     edges: List[List[int]] = []
@@ -34,7 +41,7 @@ def make_generic_linear_backend(
     seed: int = 42,
     basis_gates: Optional[List[str]] = None,
 ) -> Any:
-    """``GenericBackendV2`` on a line topology (good when FRQI width exceeds small fakes)."""
+    """Return a ``GenericBackendV2`` on a line topology of ``num_qubits`` qubits."""
     from qiskit.providers.fake_provider import GenericBackendV2
 
     bg = basis_gates or ["cx", "rz", "sx", "id", "x"]
@@ -47,7 +54,13 @@ def make_generic_linear_backend(
 
 
 def load_named_fake_backend_v2(name: str) -> Any:
-    """Instantiate ``FakeFooV2`` from ``qiskit.providers.fake_provider`` by class name."""
+    """Instantiate a ``Fake*V2`` backend from ``qiskit.providers.fake_provider`` by name.
+
+    Raises
+    ------
+    ValueError
+        If ``name`` is not a known backend class.
+    """
     import importlib
 
     mod = importlib.import_module("qiskit.providers.fake_provider")
@@ -59,14 +72,22 @@ def load_named_fake_backend_v2(name: str) -> Any:
 
 
 def noise_model_from_backend(backend: Any) -> Any:
-    """Aer :class:`~qiskit_aer.noise.NoiseModel` built from a ``BackendV2`` snapshot."""
+    """Return an Aer :class:`NoiseModel` built from a ``BackendV2`` snapshot."""
     from qiskit_aer.noise import NoiseModel
 
     return NoiseModel.from_backend(backend)
 
 
 def load_yaml_preset(path: Path | str) -> Dict[str, Any]:
-    """Load a YAML preset document (requires PyYAML)."""
+    """Load a YAML preset document as a mapping.
+
+    Raises
+    ------
+    RuntimeError
+        If PyYAML is not installed.
+    ValueError
+        If the document is not a top-level mapping.
+    """
     try:
         import yaml  # type: ignore[import-untyped]
     except ImportError as exc:  # pragma: no cover
@@ -85,7 +106,21 @@ def build_noise_model_from_preset(
     *,
     scale: float = 1.0,
 ) -> Tuple[Any, Dict[str, Any]]:
-    """Return ``(noise_model, flat_metadata)`` using keys under ``doc['noise']``."""
+    """Build a noise model from a preset's ``noise`` mapping.
+
+    Multiplicative ``scale`` is applied to the depolarizing/readout knobs but not
+    to the absolute ``t1``/``t2``/gate-time values.
+
+    Returns
+    -------
+    tuple
+        ``(noise_model, flat_metadata)``.
+
+    Raises
+    ------
+    ValueError
+        If ``doc['noise']`` is missing or not a mapping.
+    """
     from src.noise_models import build_noise_model
 
     noise = doc.get("noise", {})
@@ -123,7 +158,13 @@ def build_noise_model_from_preset(
 
 
 def coupling_map_from_backend(backend: Any) -> CouplingMap:
-    """Best-effort :class:`~qiskit.transpiler.CouplingMap` for a ``BackendV2``."""
+    """Return a :class:`CouplingMap` for a ``BackendV2`` (best effort).
+
+    Raises
+    ------
+    ValueError
+        If the backend exposes no coupling map.
+    """
     cm = getattr(backend, "coupling_map", None)
     if cm is None:
         raise ValueError("Backend has no coupling_map.")

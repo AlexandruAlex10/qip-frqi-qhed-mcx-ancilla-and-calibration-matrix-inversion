@@ -1,20 +1,18 @@
+"""Image quality metrics: PSNR and SSIM variants.
 
-"""
-Metrics for evaluating image quality, such as PSNR and a simple SSIM-like score.
-
-PSNR (Peak Signal-to-Noise Ratio) is a common metric for measuring the quality of
-reconstructed images compared to reference images. It is defined as:
-PSNR = 20 * log10(MAX_I) - 10 * log10(MSE)
-where MAX_I is the maximum possible pixel value of the image (e.g., 255 for 8-bit images)
-and MSE is the mean squared error between the two images.
+PSNR is ``20 * log10(MAX_I) - 10 * log10(MSE)``, where ``MAX_I`` is the maximum
+pixel value (255 for 8-bit images) and ``MSE`` is the mean squared error.
 """
 
 from __future__ import annotations
 
 import numpy as np
 
+__all__ = ["psnr", "ssim_uint8", "ssim_like"]
+
 
 def psnr(a: np.ndarray, b: np.ndarray, data_range: float = 255.0) -> float:
+    """Return the peak signal-to-noise ratio in dB (``inf`` for identical inputs)."""
     a = np.asarray(a, dtype=np.float64)
     b = np.asarray(b, dtype=np.float64)
     mse = np.mean((a - b) ** 2)
@@ -24,10 +22,21 @@ def psnr(a: np.ndarray, b: np.ndarray, data_range: float = 255.0) -> float:
 
 
 def ssim_uint8(a: np.ndarray, b: np.ndarray, *, data_range: float = 255.0) -> float:
-    """Structural similarity (SSIM) for 2D grayscale images via scikit-image.
+    """Return the structural similarity of two grayscale images via scikit-image.
 
-    Expects spatially aligned arrays of the same shape. ``data_range`` should
-    match the intensity scale (255 for uint8-style images).
+    The window size adapts to the (small) image side so SSIM works on 4x4 tiles.
+
+    Parameters
+    ----------
+    a, b : np.ndarray
+        Spatially aligned arrays of identical shape.
+    data_range : float, optional
+        Intensity scale (255 for uint8-style images).
+
+    Raises
+    ------
+    ValueError
+        If shapes differ or the images are smaller than 3x3.
     """
     from skimage.metrics import structural_similarity
 
@@ -41,9 +50,7 @@ def ssim_uint8(a: np.ndarray, b: np.ndarray, *, data_range: float = 255.0) -> fl
     if win_size % 2 == 0:
         win_size -= 1
     if win_size < 3:
-        raise ValueError(
-            "Images must be at least 3x3 for SSIM computation."
-        )
+        raise ValueError("Images must be at least 3x3 for SSIM computation.")
 
     return float(
         structural_similarity(
@@ -57,8 +64,15 @@ def ssim_uint8(a: np.ndarray, b: np.ndarray, *, data_range: float = 255.0) -> fl
 
 
 def ssim_like(a: np.ndarray, b: np.ndarray) -> float:
-    """Lightweight similarity score in [-1, 1], not a full SSIM implementation.
-    Kept simple to avoid extra dependencies.
+    """Return a lightweight global similarity score in ``[-1, 1]``.
+
+    This is a dependency-free approximation, not a full windowed SSIM; use
+    :func:`ssim_uint8` for the scikit-image metric.
+
+    Raises
+    ------
+    ValueError
+        If the inputs do not have the same number of elements.
     """
     a = np.asarray(a, dtype=np.float64).ravel()
     b = np.asarray(b, dtype=np.float64).ravel()

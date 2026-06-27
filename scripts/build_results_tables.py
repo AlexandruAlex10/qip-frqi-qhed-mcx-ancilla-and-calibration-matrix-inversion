@@ -1,6 +1,7 @@
-"""
-Single ingestion path for thesis results: load outputs/ per thesis/results_bundle.yaml,
-validate columns, optional manifest freshness checks, emit tables/stats/figures under thesis/generated/.
+"""Single ingestion path for thesis results.
+
+Loads outputs/ per thesis/results_bundle.yaml, validates columns, runs optional
+manifest freshness checks, and emits tables/stats/figures under thesis/generated/.
 """
 
 from __future__ import annotations

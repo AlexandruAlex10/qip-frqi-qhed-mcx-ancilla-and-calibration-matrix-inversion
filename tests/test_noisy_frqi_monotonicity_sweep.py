@@ -1,11 +1,10 @@
-"""
-Monotonicity of noisy FRQI metrics vs noise scale.
-"""
+"""Monotonicity of noisy FRQI metrics vs noise scale."""
 
 from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -18,10 +17,13 @@ import numpy as np
 from src.frqi import required_position_qubits
 from src.noise_models import build_noise_model, noisy_frqi_metrics_row
 
+ROOT = Path(__file__).resolve().parents[1]
+DATA = ROOT / "data" / "test_images"
+
 
 @pytest.mark.parametrize("method", ["naive", "vchain"])
 def test_fidelity_nonincreasing_with_scale_4x4(method: str):
-    img = np.load(os.path.join("data", "test_images", "test_4x4.npy"))
+    img = np.load(DATA / "test_4x4.npy")
     _ = required_position_qubits(int(img.shape[0]))
     scales = (0.0, 0.05, 0.1, 0.15)
     fids: list[float] = []
@@ -37,8 +39,8 @@ def test_vchain_fewer_transpiled_cx_than_scaled_naive_at_8x8():
     """Structural CSV narrative: v-chain full prep CX < naive slice-scaled at N=8."""
     import pandas as pd
 
-    path = os.path.join("outputs", "frqi_structural_metrics.csv")
-    if not os.path.isfile(path):
+    path = ROOT / "outputs" / "frqi_structural_metrics.csv"
+    if not path.is_file():
         pytest.skip(f"Missing {path}; run scripts/frqi_structural_resources.py")
     df = pd.read_csv(path)
     v = df[(df["kind"] == "struct_vchain") & (df["image_size"] == 8)]["cx"].iloc[0]
