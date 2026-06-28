@@ -31,7 +31,7 @@ def draw_toy_naive_vs_ancilla() -> None:
     for ax, title in zip(
         axes,
         (
-            "Naive structural view (no ancilla)",
+            "Naive structural view (noancilla)",
             "Improved slice (v-chain MCX + ancilla)",
         ),
     ):

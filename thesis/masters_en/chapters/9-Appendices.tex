@@ -1,7 +1,7 @@
 \chapter{Symbols and register ordering}
 
 \section{Symbol table}
-The symbols used throughout the thesis are collected below for quick reference.
+The symbols used throughout the thesis are collected below for quick reference:
 \begin{table}[htbp]
 \centering
 \caption{Frequently used symbols.}
@@ -21,28 +21,28 @@ $\Delta$ & Paired difference (vchain$-$naive or mitigated$-$raw) \\
 \end{table}
 
 \section{Register ordering}
-The implementation fixes the color qubit as the least significant bit of the joint index $(\mathrm{position}\Vert c)$, matching Qiskit bit-ordering in \texttt{src/frqi.py} and the structural code in \texttt{src/improved.py}.
+The implementation fixes the color qubit as the least significant bit of the joint index $(\mathrm{position}\Vert c)$, matching Qiskit bit-ordering in file \texttt{src/frqi.py} and the structural code in file \texttt{src/improved.py}.
 
 \chapter{Reproduction checklist}
 
-Run from the repository root with the virtual environment in \texttt{requirements.txt}:
+Run from the repository root, with the virtual environment set from file \texttt{requirements.txt}:
 \begin{enumerate}
   \item \texttt{pytest}
   \item \texttt{python scripts/frqi\_qhed\_sobel.py}
   \item \texttt{python scripts/frqi\_structural\_resources.py}
-  \item \texttt{python scripts/noisy\_frqi\_sweep.py} (add \texttt{--allow-heavy-dm} only on machines with sufficient RAM)
+  \item \texttt{python scripts/noisy\_frqi\_sweep.py} (add \texttt{---allow-heavy-dm} flag only on machines with sufficient RAM)
   \item \texttt{python scripts/noisy\_recon\_qhed\_edge\_metrics.py}
   \item \texttt{python scripts/readout\_mitigation\_shot\_sweep.py}
-  \item \texttt{python scripts/build\_results\_tables.py --require-figures}
+  \item \texttt{python scripts/build\_results\_tables.py ---require-figures}
 \end{enumerate}
-See \texttt{thesis/results\_configuration.md} for manifest timestamps and pinned versions.
+See file \texttt{thesis/results\_configuration.md} for manifest timestamps and pinned versions.
 
 \chapter{Supplementary tables}
 
-\Cref{tab:noisy-wide-excerpt} shows a short cross-section of the noisy edge metrics, with one row per image size.
+\Cref{tab:noisy-wide-excerpt} presents a couple of noisy edge metrics, with one row per image size.
 \begin{table}[htbp]
 \centering
-\caption{Excerpt of noisy edge metrics (values rounded for display).}
+\caption{Noisy edge metrics.}
 \label{tab:noisy-wide-excerpt}
 \footnotesize
 \begin{tabular}{lrrrr}
@@ -55,47 +55,33 @@ test\_16x16 & 0.10 & 0.037 & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
-The complete paired naive-versus-v-chain pivot lives in \texttt{thesis/generated/tables.md}; \Cref{tab:noisy-wide-excerpt} reproduces only a small excerpt, and the full CSV is \texttt{outputs/noisy\_recon\_qhed\_edges.csv}. Rows where v-chain is missing at $16\times16$ appear as \texttt{NaN} in the CSV when density-matrix simulation is skipped.
+The complete paired naive-versus-v-chain pivot can be found in file \texttt{thesis/generated/tables.md}; This table reproduces only a small slice. The full CSV can be consulted in \texttt{outputs/noisy\_recon\_qhed\_edges.csv}. Rows where v-chain is missing for image of size $16\times16$ appear as \texttt{NaN} in the CSV when density-matrix simulation is skipped due to memory constraints.
 
 \chapter{Complexity and scaling reference}
 
-The reminders below fix the orders of magnitude that bound simulation cost in this thesis; constants depend on the transpiler and basis.
+Table bellow fixes the orders of magnitude and scalings that appear in this thesis.
 \begin{table}[htbp]
 \centering
-\caption{Informal scaling reminders for this thesis (constants depend on transpiler and basis).}
+\caption{Orders of magnitude and scaling used in this thesis.}
 \begin{tabular}{ll}
 \toprule
 Object & Scaling \\
 \midrule
 Statevector amplitudes & $O(2^n)$ complex numbers \\
 Density matrix entries & $O(4^n)$ real numbers \\
-FRQI qubits (this repo) & $n = 1 + m$ with $m=2\log_2 N$ \\
+FRQI qubits & $n = 1 + m$ with $m=2\log_2 N$ \\
 Pixels & $N_{\mathrm{pix}} = 2^m$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\chapter{Frozen bundle parameters (excerpt)}
+\chapter{Extended noisy edge metrics}
 
-The repository pins CSV rows to JSON manifests. The bullets below summarize \texttt{thesis/results\_configuration.md} as of the submission snapshot and should be read alongside \texttt{thesis/results\_bundle.yaml}.
-
-\begin{itemize}[leftmargin=*]
-  \item \textbf{Noisy reconstructions / edge metrics:} \texttt{outputs/noisy\_recon\_qhed\_edges.csv} pairs with \texttt{experiment\_manifest\_noisy\_recon\_qhed\_edges.json}; images \texttt{test\_4x4}, \texttt{test\_8x8}, \texttt{test\_16x16}; methods \texttt{naive} and \texttt{vchain}; synthetic depolarizing scales $0.0$--$0.2$ in steps of $0.05$; \texttt{mock\_backend\_seed=42}; Qiskit~1.3.3 and Aer~0.16.4 on Python~3.11.3; \texttt{transpile\_optimization\_level=0}.
-  \item \textbf{Readout mitigation:} \texttt{outputs/readout\_mitigation\_shot\_sweep.csv} with calibration shots 8000, data shots 12000, Tikhonov \texttt{rcond} $10^{-6}$, bootstrap replicates 400, synthetic readout errors $r_{01}=0.08$, $r_{10}=0.05$, shot seeds $1$--$10$.
-  \item \textbf{Noisy FRQI sweep:} \texttt{outputs/noisy\_frqi\_metrics.csv} shares the same image/method/noise grid and optimization level~0 manifest.
-\end{itemize}
-
-\chapter{Manifest fields (selected)}
-
-The JSON manifests under \texttt{outputs/} typically record the Qiskit and Aer versions, random seeds, noise mode, topology, transpile optimization level, image identifiers, flags such as \texttt{allow\_heavy\_dm}, and UTC timestamps. These fields let a third party detect when a CSV is stale relative to a regenerated manifest.
-
-\chapter{Noisy edge metrics (extended excerpt)}
-
-\Cref{tab:noisy-long} lists additional rows from \texttt{outputs/noisy\_recon\_qhed\_edges.csv} for \texttt{test\_4x4} and \texttt{test\_8x8} at all recorded noise scales. The values are rounded; the CSV holds full precision and manifest metadata.
+\Cref{tab:noisy-long} lists additional rows from file \texttt{outputs/noisy\_recon\_qhed\_edges.csv} for \texttt{test\_4x4} and \texttt{test\_8x8} at all recorded noise scales (rounded values).
 \begin{table}[htbp]
 \centering
 \footnotesize
-\caption{Noisy reconstruction edge SSIM (naive vs v-chain) for smaller test images.}
+\caption{Noisy reconstruction edge SSIM naive vs v-chain for smaller test images.}
 \label{tab:noisy-long}
 \begin{tabular}{p{2.0cm}rrrr}
 \toprule
@@ -130,14 +116,12 @@ test\_8x8 & 0.20 & $0.000$ & 0.020 & 0.020 \\
   \item[\texttt{struct\_naive\_slice\_scaled}] Engineering extrapolation that transpiles one representative naive pixel slice and multiplies depth/CX by $N_{\mathrm{pix}}$.
 \end{description}
 
-The scripts \texttt{frqi\_structural\_resources.py}, \texttt{noisy\_frqi\_sweep.py}, and \texttt{noisy\_recon\_qhed\_edge\_metrics.py} write machine-readable CSV manifests under \texttt{outputs/}; the thesis cites only stable excerpts, so the PDF stays buildable on a fresh clone.
+\chapter{Structural metrics}
 
-\chapter{Structural metrics (CSV mirror)}
-
-\Cref{tab:struct-csv} mirrors \texttt{outputs/frqi\_structural\_metrics.csv} for auditability. The values follow the structural toolchain in \cref{ch:methods}; rows labelled \texttt{struct\_naive\_full} exist only for $4\times 4$, because full naive transpilation becomes unwieldy at larger $m$.
+\Cref{tab:struct-csv} was created from file \texttt{outputs/frqi\_structural\_metrics.csv}. The values are gathered from \cref{ch:methods}; rows labelled \texttt{struct\_naive\_full} exist only for the image of size $4\times 4$, because full naive transpilation becomes difficult for a larger $m$.
 \begin{table}[htbp]
 \centering
-\caption{Structural FRQI preparation metrics (transpiled, optimization level~3, unconstrained topology).}
+\caption{Structural FRQI preparation metrics.}
 \label{tab:struct-csv}
 \scriptsize
 \begin{tabular}{@{}lrrlrrr@{}}
@@ -158,19 +142,17 @@ test\_16x16 & 16 & 8 & struct\_vchain & 16 & 29435 & 11663 \\
 \end{tabular}
 \end{table}
 
-The scaled naive rows intentionally ignore global optimizations across pixels; they isolate the multi-controlled skeleton cost discussed in \texttt{thesis/design/resource\_and\_complexity.md}. Comparing them with v-chain totals therefore answers an engineering order-of-magnitude question rather than claiming optimality of either compiled circuit.
+\chapter{Time running the simulations for $4\times4$ and $8\times8$ images}
 
-\chapter{Simulator wall-clock excerpt \texorpdfstring{($4\times4$ and $8\times8$)}{(4x4 and 8x8)}}
-
-\Cref{tab:wallclock} records representative \texttt{wall\_s} fields from \texttt{thesis/generated/tables.md} for the noisy FRQI sweep (density-matrix method, optimization level~0 per manifest). Times vary with the CPU thermal state; the point is order-of-magnitude feasibility on a workstation, not a reproducible benchmark.
+\Cref{tab:wallclock} records how long some simulations took to complete.
 \begin{table}[htbp]
 \centering
-\caption{Wall-clock seconds for selected noisy FRQI rows (two decimals).}
+\caption{Time needed for running simulations for selected noisy FRQI experiments.}
 \label{tab:wallclock}
 \footnotesize
 \begin{tabular}{@{}llrrr@{}}
 \toprule
-image & method & scale & wall (s) & total qubits \\
+image & method & scale & time (s) & total qubits \\
 \midrule
 test\_4x4 & naive & 0.00 & 0.67 & 6 \\
 test\_4x4 & vchain & 0.00 & 0.36 & 8 \\
@@ -184,18 +166,18 @@ test\_8x8 & vchain & 0.20 & 54.81 & 12 \\
 \end{tabular}
 \end{table}
 
-At $8\times8$, v-chain circuits are wider; even with fewer CX than naive after transpilation, scheduling a larger Hilbert space can raise the wall time for density-matrix evolution. Reading wall-clock alongside CX therefore matters for lab scheduling, not only for asymptotic counts.
+In the case of the $8\times8$ image, v-chain circuits are wider; even with fewer CX than naive circuits after transpilation, scheduling a larger Hilbert space can raise the time for generatiing the density-matrix.
 
 \chapter{Repository map and software architecture}
 \label{sec:repo-map}
 
-This appendix collects the implementation-level detail that supports the method in \cref{ch:methods} but would otherwise interrupt its narrative. The complete source code is available at \url{https://github.com/AlexandruAlex10/qip-frqi-qhed-mcx-ancilla-and-calibration-matrix-inversion}.
+The complete source code is available at \url{https://github.com/AlexandruAlex10/qip-frqi-qhed-mcx-ancilla-and-calibration-matrix-inversion}.
 
-\Cref{tab:repo-map} ties the mathematical objects of the methods chapter to Python modules and the scripts that produced the frozen CSV and PNG artifacts under \path{outputs/}. Structural transpiles use optimization level~3 (\path{frqi_structural_resources.py}); the noisy bundles in \path{thesis/results_configuration.md} use optimization level~0 for fair naive--v-chain comparisons.
+\Cref{tab:repo-map} ties the mathematical objects of the methods chapter to Python modules and scripts.
 
 \begin{table}[H]
 \centering
-\caption{Core modules and experiment drivers (selected).}
+\caption{Core modules and experiment drivers.}
 \label{tab:repo-map}
 \small
 \begin{tabular}{@{}p{4.2cm}p{4.8cm}p{4.6cm}@{}}
@@ -207,13 +189,10 @@ Structural \texttt{MCXGate} modes & \path{src/improved.py} & \path{frqi_structur
 QHED + Sobel scoring & \path{src/qhed.py} & \path{frqi_qhed_sobel.py}, \path{noisy_recon_qhed_edge_metrics.py} \\
 Metrics (PSNR, SSIM, fidelity) & \path{src/metrics.py} & all image-quality paths \\
 Depolarizing DM sweeps & \path{src/noise_models.py} & \path{noisy_frqi_sweep.py} \\
-Readout matrix inversion demo & (design in \path{thesis/design/}) & \path{readout_mitigation_shot_sweep.py} \\
+Readout matrix inversion & (design in \path{thesis/design/}) & \path{readout_mitigation_shot_sweep.py} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \section{Computational workflow and software architecture}
 The experiments are orchestrated as Python scripts that write CSV outputs and PNG figures under \texttt{outputs/}. The thesis ingestion script (\texttt{build\_results\_tables.py}) validates column contracts, compares CSV modification times against manifest timestamps, and emits Markdown and \LaTeX{} fragments under \texttt{thesis/generated/}. Committed excerpts under \texttt{thesis/masters\_en/generated/} keep the PDF buildable even when the gitignored generated files are absent on a fresh clone.
-
-\section{Design choices affecting comparability}
-All noisy comparisons pair naive and v-chain rows from the same CSV export at identical tuples $(\mathrm{image},\mathrm{noise\_scale},\mathrm{topology},\ldots)$. When v-chain rows are missing, the paired tests exclude those cells automatically. This is honest, but it lowers statistical power at $16\times16$. Transpilation uses a fixed optimization level so that CX reductions reflect preparation structure rather than optimizer randomness.

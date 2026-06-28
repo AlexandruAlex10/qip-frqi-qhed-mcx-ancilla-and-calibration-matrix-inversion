@@ -35,7 +35,7 @@ The key point for the experiments is that only the first box changes between run
 The remaining sections follow this data flow: notation and registers, FRQI preparation and its two synthesis modes, decoding back to an image, the QHED edge stage, the noise model, the metrics, the readout slice, and the statistics. The experiment-by-experiment code paths are collected in \Cref{sec:pipelines}, and a high-level repository tree closes the chapter (\Cref{fig:repo-tree}); the full module-to-script mapping stays in the appendix (\Cref{sec:repo-map}).
 
 \section{Notation and registers}
-This section fixes the symbols and the qubit ordering used throughout the chapter. Let $N\in\{4,8,16\}$ be the linear image size. Pixels are indexed by $p\in\{0,\ldots,N^2-1\}$ with $N_{\mathrm{pix}}=N^2=2^m$ and $m=2\log_2 N$. The FRQI data register has one \emph{color} qubit $c$ and $m$ \emph{position} qubits, ordered so that $c$ is the least significant bit of the computational-basis index, matching \texttt{src/frqi.py} and \texttt{src/improved.py}. Ancillas used only for multi-controlled decomposition are written $a_j$ when present.
+This section fixes the symbols and the qubit ordering used throughout the chapter. Let $N\in\{4,8,16\}$ be the linear image size. Pixels are indexed by $p\in\{0,\ldots,N^2-1\}$ with $N_{\mathrm{pix}}=N^2=2^m$ and $m=2\log_2 N$. The FRQI data register has one \emph{color} qubit $c$ and $m$ \emph{position} qubits, ordered so that $c$ is the least significant bit of the computational-basis index, matching files \texttt{src/frqi.py} and \texttt{src/improved.py}. Ancillas used only for multi-controlled decomposition are written $a_j$ when present.
 
 Concretely, the joint state $\ket{p}\otimes\ket{x}_c$ sits at basis index $2p+x$, because the color bit $x\in\{0,1\}$ is the LSB. Pixel $p$ therefore occupies the index pair $2p$ (color~$0$) and $2p+1$ (color~$1$). For example, with $N=4$ (so $m=4$) the pixel $p=5$ has address bits $0101$, and its two amplitudes live at indices $10$ and $11$. This is the convention used by both the encoder and the decoder, so position and color never get swapped between stages.
 
@@ -58,9 +58,9 @@ Take a mid-gray pixel $I[p]=128$. \Cref{eq:frqi-angle} gives $\theta_p=\tfrac{\p
 \paragraph{The $R_y(2\theta_p)$ factor.}
 Qiskit defines the rotation as $R_y(\phi)=\exp(-i\tfrac{\phi}{2}Y)$, so $R_y(\phi)\ket{0}=\cos\tfrac{\phi}{2}\ket{0}+\sin\tfrac{\phi}{2}\ket{1}$. To obtain the amplitudes $\cos\theta_p$ and $\sin\theta_p$ of \Cref{eq:frqi-state}, the implementation therefore applies $R_y(2\theta_p)$ on the color qubit: the half-angle in the Qiskit gate cancels the factor of two and leaves the intended $\theta_p$.
 
-\subsection{Sequential preparation routine (logical view)}
+\subsection{Sequential preparation routine}
 \label{sec:frqi-seq}
-The circuit builds \Cref{eq:frqi-state} one address at a time, repeating the same \emph{match--rotate--uncompute} pattern for every pixel; only the rotation angle changes between iterations. The routine below matches \texttt{src/frqi.py} and \texttt{src/improved.py}, and the structural variants of \Cref{sec:struct-prep} differ only in how the multi-controlled $X$ layers are synthesized, not in the output state.
+The circuit builds \Cref{eq:frqi-state} one address at a time, repeating the same \emph{match--rotate--uncompute} pattern for every pixel; only the rotation angle changes between iterations. The routine below matches files \texttt{src/frqi.py} and \texttt{src/improved.py}, and the structural variants of \Cref{sec:struct-prep} differ only in how the multi-controlled $X$ layers are synthesized, not in the output state.
 \begin{lstlisting}[language={}, basicstyle=\ttfamily\footnotesize, frame=single, breaklines=true]
 H on every position qubit          # uniform superposition sum_p |p>
 for p in 0 .. N_pix-1:
@@ -73,16 +73,16 @@ Because the inner block runs $N_{\mathrm{pix}}$ times, the per-pixel multi-contr
 
 \section{Structural FRQI preparation: naive versus v-chain}
 \label{sec:struct-prep}
-The same logical FRQI state is realized with two Qiskit \texttt{MCXGate} modes that trade qubits against gate count:
+The same logical FRQI state is realized with two Qiskit \texttt{MCX} gate modes that trade qubits against gate count:
 \begin{itemize}
   \item \textbf{Naive (\texttt{noancilla}):} no dedicated ancillas; the decomposition can incur high CX counts per multi-controlled slice~\cite{Zindorf2024EfficientMCG}.
   \item \textbf{V-chain (\texttt{v-chain}):} uses up to $m-2$ dirty ancillas to lower CX depth after transpilation~\cite{Vale2023MCSU2,Azevedo2024LowDepthMCG}.
 \end{itemize}
-Full naive transpilation runs only for $4\times 4$. For $8\times 8$ and $16\times 16$, the table reports \texttt{struct\_naive\_slice\_scaled}: it transpiles one representative pixel slice and multiplies the depth and CX by $N_{\mathrm{pix}}$. This is an engineering extrapolation, not a globally optimized circuit~\cite{Arsoski2024MCXQFT}.
+Full naive transpilation runs only for $4\times 4$. For $8\times 8$ and $16\times 16$, the table reports \texttt{struct\_naive\_slice\_scaled}: it transpiles one representative pixel slice and multiplies the depth and CX by $N_{\mathrm{pix}}$.
 
-\subsection{Multi-controlled NOT gates and address matching}
+\subsection{MCX gates and address matching}
 \label{sec:mcx-explained}
-The multi-controlled $X$ gate (MCX) is the building block that makes FRQI's address matching possible. A plain NOT gate (Pauli $X$) flips one qubit; a \emph{controlled} NOT (CX) flips its target only when one control is $\ket{1}$; and a \emph{multi-controlled} NOT flips the target only when \textbf{all} of its controls are $\ket{1}$ at once. With $k$ controls it is written $C^{k}X$, and the two-control case is the Toffoli gate.
+The Multi-Controlled NOT gate (MCX) is the building block that makes FRQI's address matching possible. A plain NOT gate (Pauli $X$) flips one qubit; a Controlled-NOT (CX) flips its target only when one control is $\ket{1}$; and a Multi-Controlled NOT flips the target only when \textbf{all} of its controls are $\ket{1}$ at once. With $k$ controls it is written $C^{k}X$, and the two-control case is the Toffoli gate.
 
 \paragraph{Why FRQI needs it.}
 The position register holds a superposition over every pixel address $\ket{p}$ simultaneously. To build the FRQI state, the color qubit must be rotated by $\theta_p$ \emph{only} for the address $p$ currently being encoded, leaving the others untouched. A multi-controlled gate does exactly that: wiring the position qubits as controls makes the gate ``fire'' on precisely the basis state whose bit pattern matches. In other words, MCX selects one row of the superposition at a time.
@@ -97,11 +97,11 @@ Hardware cannot run a many-control MCX directly; the transpiler must rewrite it 
 \end{itemize}
 For an $m$-qubit address register, one v-chain gate needs about $m-2$ ancillas (for $m\ge 3$). Because the ancillas are reset at the end of each pixel iteration, the \emph{same} workspace qubits are reused for all $N_{\mathrm{pix}}$ pixels~\cite{Vale2023MCSU2,Azevedo2024LowDepthMCG}. This is the core trade studied later: v-chain spends a few qubits to buy a large CX reduction.
 
-\paragraph{A tiny worked example.}
+\paragraph{Example.}
 Suppose $m=2$, so two position qubits address four pixels $\ket{00},\ket{01},\ket{10},\ket{11}$. To encode the pixel at $p=2=\ket{10}$, the routine flips the lower position qubit with an $X$ gate (so the target pattern becomes $\ket{11}$), applies a two-controlled rotation on the color qubit, then flips the lower qubit back. Only the $\ket{10}$ component receives $R_y(\theta_2)$; the other three are unchanged. Repeating for $p=0,1,2,3$ builds the full state one address at a time.
 
-\subsection{Schematics: toy naive versus v-chain}
-\Cref{fig:toy-naive-vchain} contrasts a three-qubit address register plus one color qubit in the naive \texttt{noancilla} view (one conceptual multi-controlled rotation block) against an ancilla-assisted v-chain slice (MCX ladder, controlled $R_y$, uncompute). \Cref{fig:block-frqi-prep} then places the same per-pixel pattern inside the full block-level preparation loop. Both drawings are qualitative: real FRQI circuits repeat the inner pattern for every pixel address. They come from \texttt{scripts/toy\_and\_block\_level\_diagrams.py} and are stored under \path{thesis/design/figures/}.
+\subsection{Schematics: naive versus v-chain circuit}
+\Cref{fig:toy-naive-vchain} contrasts a three-qubit address register plus one color qubit in the naive \texttt{noancilla} view (one conceptual multi-controlled rotation block) against an ancilla-assisted v-chain slice (MCX ladder, controlled $R_y$, uncompute). \Cref{fig:block-frqi-prep} then places the same per-pixel pattern inside the full block-level preparation loop. Real FRQI circuits repeat the inner pattern for every pixel address. Drawings come from \texttt{scripts/toy\_and\_block\_level\_diagrams.py} and are stored under \path{thesis/design/figures/}.
 
 \begin{figure}[htbp]
 \centering
@@ -119,13 +119,13 @@ Suppose $m=2$, so two position qubits address four pixels $\ket{00},\ket{01},\ke
 
 \FloatBarrier
 
-\subsection{Transpiled excerpt (Qiskit \texttt{MCXGate} v-chain)}
-\Cref{fig:stub-mcx} shows a minimal Qiskit circuit (saved from the repository stub helper) illustrating how a multi-controlled $X$ expands in v-chain mode before basis-gate transpilation, complementing the logical cartoons above.
+\subsection{Schematics: Qiskit \texttt{MCX} v-chain gate}
+\Cref{fig:stub-mcx} shows a minimal Qiskit circuit illustrating how a MCX expands in v-chain mode before basis-gate transpilation.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.55\textwidth]{stub_mcx_vchain.png}
-\caption{Excerpt: \texttt{MCXGate} with \texttt{mode="v-chain"} on a few qubits (\texttt{outputs/stub\_mcx\_vchain.png}, from \texttt{scripts/qiskit\_stub\_draw.py}).}
+\caption{\texttt{MCX gate} with \texttt{mode="v-chain"} on a few qubits (\texttt{outputs/stub\_mcx\_vchain.png}, from \texttt{scripts/qiskit\_stub\_draw.py}).}
 \label{fig:stub-mcx}
 \end{figure}
 
@@ -142,7 +142,7 @@ The simulator returns either a statevector (noiseless case) or a density matrix 
 \end{equation}
 which is just \Cref{eq:frqi-angle} solved for $I[p]$. Equivalently, the conditional probability of measuring color~$1$ at address $p$ is $P=d_1/(d_0+d_1)=\sin^2\theta_p$, so $\hat{\theta}_p=\arcsin\sqrt{P}$.
 
-\paragraph{Worked round trip.}
+\paragraph{Example.}
 Continuing the $I[p]=128$ example: encoding gave $\theta_p\approx 0.789$, so the conditional color-$1$ probability is $P=\sin^2(0.789)\approx 0.504$. Decoding inverts it as $\hat{\theta}_p=\arcsin\sqrt{0.504}\approx 0.789$ and $\hat{I}[p]=\operatorname{round}(255\cdot 2\cdot 0.789/\pi)=\operatorname{round}(128.1)=128$, recovering the original intensity exactly in the noiseless case.
 
 Collecting all $N_{\mathrm{pix}}$ values on the $N\times N$ grid gives $\hat{I}$ in the \texttt{uint8} range. The statevector path reads $d_0,d_1$ from squared amplitudes (\srccode{src/frqi.py::reconstruct_image_from_statevector}); the noisy path reads them from the diagonal of $\rho$ after tracing out the irrelevant qubits, which is why it is called partial-trace decoding (\srccode{src/frqi.py::reconstruct_image_from_reduced_density_matrix}). From here on every quantity is computed on plain pixel arrays.
@@ -152,13 +152,13 @@ The quantum Hadamard edge detector (QHED) is the downstream operator that turns 
 
 \begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*]
   \item \textbf{Input.} Start from the decoded $N\times N$ image $\hat{I}$ of \Cref{sec:decode}.
-  \item \textbf{Walsh--Hadamard transform.} Apply a fast Walsh--Hadamard transform (FWHT) along rows and then columns. The FWHT is a close cousin of the Fourier transform but uses only additions and subtractions: it repeatedly forms sums and differences of pairs of values, so it measures how strongly the image changes between neighbouring positions. Sharp changes (edges) produce large coefficients; flat regions produce small ones.
-  \item \textbf{Magnitude spectrum.} Take the absolute value of the coefficients. This keeps the \emph{strength} of each change while dropping its sign, giving a contrast map in the transform domain.
-  \item \textbf{Inverse transform.} Apply the inverse FWHT to bring the contrast map back to the spatial layout, so high values sit where the image varies strongly.
+  \item \textbf{Walsh--Hadamard transform.} Apply a fast Walsh--Hadamard transform (FWHT) along rows and then columns. The FWHT is a close cousin of the Fourier transform but uses only additions and subtractions: it repeatedly forms sums and differences of pairs of values, so it measures how strongly the image changes between neighbouring positions. in other words, sharp changes (edges) produce large coefficients; flat regions produce small ones.
+  \item \textbf{Drop the sign.} Take the absolute value of the coefficients in order to have a contrast map, while each change keeps its strength.
+  \item \textbf{Inverse transform.} Apply the inverse FWHT to bring the contrast map back to the spatial layout, so high values sit where the image is varying the most.
   \item \textbf{Sobel reference.} Independently, apply the classical $3\times 3$ Sobel magnitude filter (defined in \Cref{sec:classical-metrics}) to the original clean image. This is the reference edge map that QHED is scored against.
 \end{enumerate}
 
-Scoring compares two edge maps: QHED on the (possibly noisy) reconstruction, and Sobel on the clean reference (the scoring box of \Cref{fig:pipeline-flow}). Because QHED is a Walsh--Hadamard contrast detector and not a literal Sobel filter, the two maps differ in shape even with no noise. Edge SSIM is therefore below $1$ in the ideal case, so the thesis reports QHED-versus-Sobel SSIM as a \emph{relative} indicator across preparation modes rather than an absolute quality score.
+Scoring compares two edge maps: QHED on the (possibly noisy) reconstruction, and Sobel on the clean reference (the scoring box of \Cref{fig:pipeline-flow}). Because QHED is a Walsh--Hadamard contrast detector and not a literal Sobel filter, the two maps differ in shape even with no noise. Edge SSIM is therefore below $1$ in the ideal case.
 
 \section{Noise model}
 The noisy runs replace exact simulation with a depolarizing channel that models the gate errors of near-term hardware, so the experiments can ask how preparation quality survives noise. Noisy simulations use Qiskit Aer with the \texttt{density\_matrix} method. A single-qubit depolarizing probability $p_1$ and a two-qubit $p_2$ act on a density matrix $\rho$ as
@@ -169,7 +169,7 @@ and similarly for the two-qubit channel on each CX site (assembled by \srccode{s
 
 \begin{table}[htbp]
 \centering
-\caption{Synthetic noise grid used in the primary CSV bundle (each scale multiplies the baseline channel strengths).}
+\caption{Synthetic noise grid (each scale multiplies the baseline channel strengths).}
 \label{tab:noise-grid}
 \begin{tabular}{lrr}
 \toprule
@@ -196,30 +196,18 @@ F(\rho,\sigma)=\bigl(\mathrm{Tr}\sqrt{\sqrt{\rho}\,\sigma\sqrt{\rho}}\bigr)^2
 compares the simulated noisy state (partial-traced to the data register) with the ideal FRQI statevector.
 
 \paragraph{How to read these numbers.}
-In plain terms: a higher PSNR (in decibels) means the reconstruction is closer to the original pixel by pixel, because it comes from a smaller MSE. SSIM closer to $1$ means local structure and contrast are preserved as a human eye would judge them, not just average brightness. Fidelity closer to $1$ means the noisy quantum state is close to the ideal FRQI state \emph{before} any image is decoded, so it measures damage at the quantum level. Edge SSIM applies the same structural-similarity idea to the two edge maps, so it reports how well the detected edges agree rather than how well the raw intensities match. Reporting all four together is deliberate: a preparation mode can improve one while leaving the others flat, and the thesis avoids hiding such mismatches behind a single headline number.
+In plain terms: a higher PSNR (in decibels) means the reconstruction is closer to the original pixel by pixel, because it comes from a smaller MSE. SSIM closer to the value of $1$ means local structure and contrast are preserved as a human eye would judge them, not just average brightness. Fidelity closer to the value of $1$ means the noisy quantum state is close to the ideal FRQI state \emph{before} any image is decoded, so it measures damage at the quantum level. Edge SSIM applies the same structural-similarity idea to the two edge maps, so it reports how well the detected edges agree rather than how well the raw intensities match.
 
 \section{Readout mitigation (shot-based slice)}
-This slice corrects for measurement error rather than gate error: a calibration (confusion) matrix is estimated and inverted so that biased shot counts can be debiased. Separately from the depolarizing density-matrix runs, projective measurements on the color qubit are simulated with a synthetic confusion matrix $A$: outcome probabilities are estimated from finite shots (\srccode{src/noise_models.py::estimate_single_qubit_readout_matrix}), then a regularized inverse (\srccode{src/noise_models.py::invert_readout_matrix}) yields mitigated probabilities via \srccode{src/noise_models.py::mitigate_linear}~\cite{Mu2025GuidedImageFiltering}. Notation follows \texttt{thesis/design/readout\_mitigation.md}; the code entry point is \srccode{scripts/readout_mitigation_shot_sweep.py::main}, and the full pipeline is given in \Cref{sec:pipe-e5}.
-
-\section{Statistical comparisons}
-Because the sample sizes are small, the thesis uses paired non-parametric tests and treats every result as exploratory. For paired naive-versus-v-chain edge metrics, it reports exploratory Wilcoxon signed-rank tests on the differences $\Delta = \mathrm{vchain}-\mathrm{naive}$ over the eight $(\mathrm{image},\mathrm{noise\_scale})$ pairs with $\mathrm{noise\_scale}>0$ in the primary bundle. Readout mitigation pairs per-seed differences $\Delta_{\mathrm{seed}} = p_{1,\mathrm{mit}}-p_{1,\mathrm{raw}}$. These tests are \textbf{hypothesis-generating} only: multiplicity across metrics is not adjusted and sample sizes are small.
-
-\paragraph{What the Wilcoxon signed-rank test is.}
-The Wilcoxon signed-rank test is a paired, non-parametric test that asks whether the signed differences $\Delta$ within matched pairs are symmetrically centered on zero. It works on ranks rather than raw values: it sorts the pairs by the \emph{absolute} size of their difference, assigns ranks, and then sums those ranks separately for the positive and negative differences. If naive and v-chain were interchangeable, the two rank sums would be similar; a lopsided split (the test statistic reported as \texttt{stat.}) indicates that one mode tends to score higher. Because it uses only the order of the differences, it makes no normality assumption, which suits these metric deltas: $n$ is small and quantities such as edge SSIM are bounded and visibly non-Gaussian, so a paired $t$-test would be hard to justify. A small $p$-value means the observed imbalance would be unlikely under the no-difference hypothesis; it does \emph{not} measure the size or practical importance of the effect, and with several metrics tested at once a single small $p$ can arise by chance. This is why the thesis reads these $p$-values together with the median $\Delta$ and treats them as exploratory.
-
-\paragraph{Inclusion protocol.}
-A row enters the edge-metric pairing only if both \texttt{edge\_ssim\_naive} and \texttt{edge\_ssim\_vchain} are finite for the same tuple $(\mathrm{image},\mathrm{noise\_scale},\mathrm{topology},\mathrm{noise\_mode})$. At $16\times 16$, v-chain columns are often \texttt{NaN} because density-matrix simulation is skipped, so those cells are excluded automatically; this reduces power but avoids imputing synthetic values. The test is SciPy's two-sided Wilcoxon on paired differences, and exact $p$-values are available because $n{=}8$ is small.
-
-\paragraph{Interpretation guardrails.}
-Even if $p<0.05$ appears for a secondary metric such as fidelity, no claim of ``statistically significant superiority of v-chain for edge quality'' is made unless the edge-centric endpoints agree. Resource reductions and fidelity shifts can coexist with flat or negative edge SSIM, because QHED couples nonlinearly to reconstruction noise and the Sobel reference is not matched to QHED's spectral stage~\cite{Geng2022HybridNISQEdge}.
+This slice helps in correcting the measurement error rather than the gate error: a calibration (confusion) matrix is estimated and inverted so that biased shot counts can be debiased. Separately from the depolarizing density-matrix runs, projective measurements on the color qubit are simulated with a synthetic confusion matrix $A$: outcome probabilities are estimated from finite shots (\srccode{src/noise_models.py::estimate_single_qubit_readout_matrix}), then a regularized inverse (\srccode{src/noise_models.py::invert_readout_matrix}) yields mitigated probabilities via \srccode{src/noise_models.py::mitigate_linear}~\cite{Mu2025GuidedImageFiltering}. Notation follows \texttt{thesis/design/readout\_mitigation.md}; the code entry point is \srccode{scripts/readout_mitigation_shot_sweep.py::main}, and the full pipeline is given in \Cref{sec:pipe-e5}.
 
 \section{Experiment pipelines}
 \label{sec:pipelines}
-The conceptual sections above describe each stage in isolation. This section ties them together by walking through every experiment end to end and naming the exact code path for each step, written as \srccode{file.py::function}. Each pipeline is presented twice: as a numbered step table that maps ``what happens'' to its routine and output, and as a compact flow diagram that reuses the box/arrow style of \Cref{fig:pipeline-flow}. \Cref{tab:pipe-overview} gives the bird's-eye view; the subsections expand one experiment each.
+Until now, this chapter has been describing the stages in isolation. This section will tie them together by walking through every experiment that will be run in an end-to-end manner.
 
 \begin{table}[H]
 \centering\footnotesize
-\caption{Overview of the experiment pipelines, their driver scripts, core routines, and primary artifacts.}
+\caption{Overview of each experiment pipeline, its driver scripts, core routines, and primary generated artifacts.}
 \label{tab:pipe-overview}
 \begin{tabular}{@{}p{0.5cm}p{2.4cm}p{4.6cm}p{4.4cm}@{}}
 \toprule
@@ -239,7 +227,7 @@ E5 & \srccode{readout_mitigation_shot_sweep.py} & \srccode{main} & \srccode{read
 \emph{Purpose: establish the noiseless reference point, decoding quality, and \texttt{initialize}-based resource counts.}
 
 \begin{table}[H]\centering\footnotesize
-\caption{Ideal FRQI+QHED baseline pipeline (\srccode{scripts/frqi_qhed_sobel.py::run_case}).}
+\caption{Ideal FRQI+QHED baseline pipeline (\srccode{scripts/frqi_qhed_sobel.py}).}
 \label{tab:pipe-ideal}
 \begin{tabular}{@{}p{0.5cm}p{3.9cm}p{5.6cm}p{2.4cm}@{}}
 \toprule
@@ -274,7 +262,7 @@ E5 & \srccode{readout_mitigation_shot_sweep.py} & \srccode{main} & \srccode{read
 \draw[arrow] (qhed) -- (score);
 \end{tikzpicture}%
 }
-\caption{E1 ideal baseline flow: a single clean image is encoded, decoded, edge-detected, and scored, with transpiled resources read off the \texttt{initialize} circuit.}
+\caption{E1 ideal baseline flow: a single clean image is encoded, decoded, edge-detected, and scored, with the help of transpiled resource metrics.}
 \label{fig:pipe-ideal}
 \end{figure}
 
@@ -283,7 +271,7 @@ E5 & \srccode{readout_mitigation_shot_sweep.py} & \srccode{main} & \srccode{read
 \emph{Purpose: compare naive versus v-chain CX and depth as the image grows, using transpiled circuit statistics.}
 
 \begin{table}[H]\centering\footnotesize
-\caption{Structural resource pipeline (\srccode{scripts/frqi_structural_resources.py::main}).}
+\caption{Structural resource pipeline (\srccode{scripts/frqi_structural_resources.py}).}
 \label{tab:pipe-structural}
 \begin{tabular}{@{}p{0.5cm}p{3.9cm}p{5.6cm}p{2.4cm}@{}}
 \toprule
@@ -316,7 +304,7 @@ E5 & \srccode{readout_mitigation_shot_sweep.py} & \srccode{main} & \srccode{read
 \draw[arrow] (tr) -- (csv);
 \end{tikzpicture}%
 }
-\caption{E2 structural resource flow: both synthesis modes are transpiled to \texttt{\{cx,rz,sx\}} and their CX/depth tabulated and plotted against image size.}
+\caption{E2 structural resource flow: both synthesis modes are transpiled to \texttt{\{cx,rz,sx\}} and their CX/depth logged against image size.}
 \label{fig:pipe-structural}
 \end{figure}
 
@@ -325,7 +313,7 @@ E5 & \srccode{readout_mitigation_shot_sweep.py} & \srccode{main} & \srccode{read
 \emph{Purpose: measure how depolarizing noise degrades fidelity and reconstruction quality across the noise grid of \Cref{tab:noise-grid}.}
 
 \begin{table}[H]\centering\footnotesize
-\caption{Noisy FRQI density-matrix pipeline (\srccode{src/noise_models.py::noisy_frqi_metrics_row}, driven by \srccode{scripts/noisy_frqi_sweep.py::main}).}
+\caption{Noisy FRQI density-matrix pipeline (\srccode{src/noise_models.py::noisy_frqi_metrics_row}, driven by \srccode{scripts/noisy_frqi_sweep.py}).}
 \label{tab:pipe-noisy}
 \begin{tabular}{@{}p{0.5cm}p{3.9cm}p{5.6cm}p{2.4cm}@{}}
 \toprule
@@ -369,7 +357,7 @@ E5 & \srccode{readout_mitigation_shot_sweep.py} & \srccode{main} & \srccode{read
 \emph{Purpose: propagate the noisy reconstruction through QHED and score edge quality against the clean Sobel reference.}
 
 \begin{table}[H]\centering\footnotesize
-\caption{Noisy-reconstruction edge pipeline (\srccode{scripts/noisy_recon_qhed_edge_metrics.py::main}).}
+\caption{Noisy-reconstruction edge pipeline (\srccode{scripts/noisy_recon_qhed_edge_metrics.py}).}
 \label{tab:pipe-noisy-edges}
 \begin{tabular}{@{}p{0.5cm}p{3.9cm}p{5.6cm}p{2.4cm}@{}}
 \toprule
@@ -400,7 +388,7 @@ E5 & \srccode{readout_mitigation_shot_sweep.py} & \srccode{main} & \srccode{read
 \draw[arrow] (ref) -| (sc);
 \end{tikzpicture}%
 }
-\caption{E4 noisy-edge flow: QHED runs on the noisy reconstruction and the resulting edge map is compared with the clean classical Sobel reference.}
+\caption{E4 noisy-edge flow: QHED runs on the noisy reconstruction and the resulting edge map is compared with the classical Sobel reference.}
 \label{fig:pipe-noisy-edges}
 \end{figure}
 
@@ -409,7 +397,7 @@ E5 & \srccode{readout_mitigation_shot_sweep.py} & \srccode{main} & \srccode{read
 \emph{Purpose: demonstrate calibration-matrix inversion on a single-qubit readout slice with finite-shot statistics and bootstrap confidence intervals.}
 
 \begin{table}[H]\centering\footnotesize
-\caption{Readout mitigation pipeline (\srccode{scripts/readout_mitigation_shot_sweep.py::main}).}
+\caption{Readout mitigation pipeline (\srccode{scripts/readout_mitigation_shot_sweep.py}).}
 \label{tab:pipe-readout}
 \begin{tabular}{@{}p{0.5cm}p{3.9cm}p{5.6cm}p{2.4cm}@{}}
 \toprule
@@ -450,10 +438,10 @@ E5 & \srccode{readout_mitigation_shot_sweep.py} & \srccode{main} & \srccode{read
 
 \subsection{E6: Results ingestion and table emission}
 \label{sec:pipe-e6}
-\emph{Purpose: validate the frozen CSVs and turn them into the thesis tables and figures.}
+\emph{Purpose: validate CSVs and turn them into the thesis tables and figures.}
 
 \begin{table}[H]\centering\footnotesize
-\caption{Results-ingestion pipeline (\srccode{scripts/build_results_tables.py::main}/\srccode{ingest}).}
+\caption{Results-ingestion pipeline (\srccode{scripts/build_results_tables.py}).}
 \label{tab:pipe-ingest}
 \begin{tabular}{@{}p{0.5cm}p{3.9cm}p{5.6cm}p{2.4cm}@{}}
 \toprule
@@ -473,10 +461,10 @@ E5 & \srccode{readout_mitigation_shot_sweep.py} & \srccode{main} & \srccode{read
 \textbf{All evidence is simulator-only.} No IBM Quantum hardware shots are included, due to lack of hardware access; results use Qiskit Aer backends and synthetic noise grids.
 
 \subsection{Data and software}
-Datasets live under \texttt{data/test\_images/} as \texttt{test\_4x4.npy}, \texttt{test\_8x8.npy}, and \texttt{test\_16x16.npy}. The Python environment is pinned in \texttt{requirements.txt} (Qiskit~1.x, Qiskit Aer, NumPy, SciPy, pandas, Matplotlib, scikit-image). The individual experiments and their end-to-end code paths are detailed in \Cref{sec:pipelines}; \Cref{tab:pipe-overview} maps each one to its driver script and primary artifact.
+Datasets live under \texttt{data/test\_images/} as \texttt{test\_4x4.npy}, \texttt{test\_8x8.npy}, and \texttt{test\_16x16.npy}. The Python environment is pinned in \texttt{requirements.txt} (Qiskit~1.x, Qiskit Aer, NumPy, SciPy, pandas, Matplotlib, scikit-image, etc.). The individual experiments and their end-to-end code paths are detailed in \Cref{sec:pipelines}; \Cref{tab:pipe-overview} maps each one to its driver script and primary artifact.
 
 \subsection{Repository layout}
-\Cref{fig:repo-tree} shows the high-level layout of the repository so the modules and scripts referenced throughout this chapter can be placed in context. The core \texttt{src/} package holds the quantum and image-processing routines, \texttt{scripts/} contains the reproducible experiment and build drivers, and \texttt{outputs/} stores the frozen artifacts the thesis ingests. The detailed mapping from each concern to its module and driver script is given in \Cref{tab:repo-map} (\Cref{sec:repo-map}).
+In \Cref{fig:repo-tree}, the repository layout is outlined with comments for the most important content inside of it.
 
 \begin{figure}[H]
 \centering
@@ -513,12 +501,9 @@ qip-frqi-qhed.../            # repository root
 |-- README.md
 +-- LICENSE
 \end{lstlisting}
-\caption{High-level repository layout (curated): top-level directories with the key \texttt{src/} modules and \texttt{scripts/} drivers. The full module-to-script mapping is in \Cref{tab:repo-map}.}
+\caption{The Repository layout: it contains key directories such as \texttt{src/} modules and \texttt{scripts/} drivers. The full module-to-script mapping is in \Cref{tab:repo-map}.}
 \label{fig:repo-tree}
 \end{figure}
-
-\subsection{Transpilation settings}
-Structural resource circuits are transpiled to basis gates \texttt{\{cx,rz,sx\}} at optimization level~3 with an unconstrained coupling map (resource study). The \textbf{frozen noisy bundles} referenced in \texttt{thesis/results\_configuration.md} instead pin \texttt{transpile\_optimization\_level=0} together with Qiskit~1.3.3 / Aer~0.16.4 and seed~42; this isolates the noise sweeps from aggressive rewrite passes that could blur naive--v-chain comparisons. CSV columns from different optimization levels should not be mixed without re-running both tracks at a common setting.
 
 \subsection{Reproducible commands}
 Each command corresponds to a pipeline in \Cref{sec:pipelines}: E1~(\Cref{tab:pipe-ideal}), E2~(\Cref{tab:pipe-structural}), E3~(\Cref{tab:pipe-noisy}), E4~(\Cref{tab:pipe-noisy-edges}), E5~(\Cref{tab:pipe-readout}), and E6~(\Cref{tab:pipe-ingest}).
@@ -541,6 +526,3 @@ python scripts/readout_mitigation_shot_sweep.py
 # E6: Regenerate thesis ingestion tables (requires PNGs if --require-figures)
 python scripts/build_results_tables.py --require-figures
 \end{lstlisting}
-
-\subsection{Provenance}
-Noisy and readout experiments are summarized in \texttt{thesis/results\_configuration.md}; the JSON manifests in \texttt{outputs/experiment\_manifest\_*.json} record the Qiskit version, the random seed, and Git commit hashes when available. Density-matrix simulation cost scales as $O(4^{n_q})$ in the worst case~\cite{NielsenChuang2010}, so $16\times 16$ v-chain rows may be absent unless heavy-memory flags are enabled, and \Cref{ch:results} flags missing cells explicitly.

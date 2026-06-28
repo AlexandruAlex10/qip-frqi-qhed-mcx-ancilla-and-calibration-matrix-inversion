@@ -543,7 +543,7 @@ def main() -> int:
         t = table_encoding_baseline(frames["frqi_qhed_sobel_metrics"])
         t.to_csv(out_dir / "table_encoding_baseline.csv", index=False)
         md_chunks.append("## Table: encoding / ideal baseline\n\n" + _df_to_markdown(t) + "\n")
-        tex_chunks.append(_df_to_latex(t, "Ideal FRQI encoding and QHED vs Sobel (transpiled initialize)", "tab:encoding_baseline"))
+        tex_chunks.append(_df_to_latex(t, "Ideal FRQI encoding and QHED vs Sobel", "tab:encoding_baseline"))
 
     if "frqi_structural_metrics" in frames:
         t = table_structural(frames["frqi_structural_metrics"])
@@ -551,7 +551,7 @@ def main() -> int:
         md_chunks.append("## Table: structural resources\n\n" + _df_to_markdown(t) + "\n")
         struct_tex = _df_to_latex(
             t,
-            "Structural FRQI preparation: transpiled depth and CX (optimization level 3)",
+            "Structural FRQI preparation: transpiled depth and CX",
             "tab:structural_resources",
         )
         tex_chunks.append(struct_tex)
@@ -571,7 +571,7 @@ def main() -> int:
         if not ex.empty:
             ex_tex = _df_to_latex(
                 ex,
-                "Noisy reconstruction: edge SSIM naive vs v-chain (excerpt, noise scale $>0$, linear topology).",
+                "Noisy reconstruction: edge SSIM naive vs v-chain.",
                 "tab:noisy_edges_excerpt",
             )
             _write_bachelors_tex_fragment(repo_root, "results_table_noisy_edges_excerpt.tex", ex_tex)
@@ -583,7 +583,7 @@ def main() -> int:
         tex_chunks.append(
             _df_to_latex(
                 rs,
-                r"Readout calibration-matrix mitigation on the color qubit ($4\times 4$, 10 seeds)",
+                r"Readout calibration-matrix mitigation on the color qubit",
                 "tab:readout_summary",
             )
         )

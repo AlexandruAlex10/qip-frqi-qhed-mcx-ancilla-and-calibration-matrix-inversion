@@ -2,27 +2,26 @@
 \thispagestyle{pagestyle}
 
 \section{Summary of contributions}
-This thesis studied a NISQ-oriented structural optimization of FRQI state preparation for a fixed QHED edge-detection stage. The work is entirely \textbf{simulator-based}, built on open Python tooling and versioned CSV manifests. Beyond the headline resource win for v-chain, its main contribution is a \textbf{transparent evaluation recipe}---resources, noisy-state fidelity, and edge-map SSIM on one grid---so that synthesis trade-offs in quantum image pipelines can be discussed without confusing transpiler CX counts with perceptual endpoints.
+This thesis studied a NISQ-oriented structural optimization of FRQI state preparation for a fixed QHED edge-detection stage, in a complete end-to-end pipeline.
 
-\textbf{Structural resources.} Replacing the naive \texttt{noancilla} multi-controlled $X$ decomposition with a v-chain ancilla pattern cuts transpiled CX sharply at larger images, at the cost of a modest increase in qubit width (\Cref{tab:structural_resources,sec:res-e2}). The advantage already holds at $4\times 4$, where v-chain uses fewer CX than full naive transpilation while spending two extra qubits, and it widens by an order of magnitude at $16\times 16$. These numbers quantify preparation cost---often the bottleneck named in FRQI hardware studies~\cite{Geng2023ImprovedFRQI}---without assuming a new image representation.
+The following claims can be made based on \Cref{ch:results}:
 
-\textbf{Ideal and noisy image quality.} Ideal FRQI reconstruction is lossless at every test size, while QHED diverges increasingly from classical Sobel as resolution grows (\Cref{tab:encoding_baseline}), consistent with prior QHED literature~\cite{Yao2017QHED}. Under depolarizing noise, the paired naive--v-chain edge-SSIM difference is \textbf{inconclusive} overall, with a negative median favoring neither mode (\Cref{sec:res-e4,tab:wilcoxon-export}). Lower CX depth does not automatically yield better edge maps at every noise scale.
-
-\textbf{Readout mitigation.} A $4\times 4$ calibration-matrix inversion demo shifts the mean $p_1$ systematically across ten seeds (\Cref{sec:res-e5,tab:readout_summary}), illustrating how readout bias on the color qubit could be corrected before intensity decoding.
-
-\section{Practical implications}
-For quantum image pipelines on near-term devices, the synthesis choice for multi-controlled preparation matters as much as the abstract FRQI model~\cite{Le2011FRQI,Vale2023MCSU2,Azevedo2024LowDepthMCG}. Practitioners should budget ancillas and report transpiled CX and depth alongside fidelity metrics. Edge operators such as QHED should be validated against classical references at each resolution~\cite{QiskitTextbookQuantumEdgeDetection}. Mitigation should be planned at the readout layer whenever intensities are inferred from measurement statistics~\cite{Mu2025GuidedImageFiltering}.
-
-\section{Reflection on the NISQ narrative}
-Preskill's NISQ framing treats near-term devices as platforms for \emph{exploring} noisy quantum dynamics and heuristics, not only as stepping stones to fault tolerance~\cite{Preskill2018NISQ}. The results here fit that caution: v-chain wins transpiled CX convincingly at large $N$ (\Cref{sec:res-e2}), yet paired edge SSIM under noise shows no clear winner (\Cref{tab:wilcoxon-export}). Reading a resource reduction as application-level superiority would over-interpret the evidence~\cite{NielsenChuang2010}.
-
-\section{Limitations}
-The full set of limitations is detailed in \Cref{sec:res-limitations}. The two that most constrain the conclusions are that the evidence is simulator-only---no hardware experiments were performed---and that the statistical comparisons are exploratory, resting on only eight paired noise cells for the edge metrics and on scaled naive baselines extrapolated from a single transpiled slice. Any claim favoring v-chain must therefore stay conditional on resolution and noise scale.
-
-\section{Ethics, integrity, and responsible claims}
-Quantum computing research sits inside public narratives about ``exponential speedups'' and near-term disruption. This thesis deliberately under-claims relative to its strongest result: lower transpiled CX counts are necessary but not sufficient for better application metrics under noise. Reporting an inconclusive edge SSIM as inconclusive---rather than cherry-picking a fidelity $p$-value---follows basic scientific-integrity norms and matches Preskill's counsel to treat NISQ devices as heuristic platforms~\cite{Preskill2018NISQ}.
-
-From a sustainability angle, density-matrix simulation at 16 qubits is energy- and memory-intensive, so documenting when rows are skipped (\texttt{NaN}) is not just an engineering footnote but an honest accounting of computational cost. Anyone replicating the study should enable \texttt{--allow-heavy-dm} only on suitable workstations.
+\begin{itemize}
+  \item \textbf{Ideal FRQI encoding:} SSIM metric reports parity between pre- and post- FRQI encoding for all image sizes.
+  \item \textbf{QHED vs. Sobel:} QHED diverges from classical Sobel as image size grows, consistent with prior literature, not because one is better than the other, but rather due to their different approach on reporting.
+  \item \textbf{Structural resources:} Replacing the naive \texttt{noancilla} MCX decomposition with a v-chain ancilla pattern cuts transpiled CX significantly at larger images, at the cost of a modest number of qubits.
+  \item \textbf{Ideal and noisy image quality:} Under depolarizing noise, QHED is not having improvements when comparing FRQI state preparation naive versus v-chain. This means that lower CX depth does not give better edge detection quality, which remains true for all noise scales.
+  \item \textbf{Readout mitigation:} An improvement can be observed when applying an inversion of the calibration matrix to correct the readout bias.
+\end{itemize}
 
 \section{Future work}
-Promising extensions include: (i)~IBM Quantum shots on the smallest circuits with layout-aware transpilation; (ii)~completing the $16\times 16$ v-chain density-matrix runs via circuit cutting or reduced noise grids; (iii)~zero-noise extrapolation and richer mitigation stacks beyond $2\times 2$ readout inversion; (iv)~comparing additional \texttt{MCXGate} modes from recent synthesis papers~\cite{Arsoski2024MCXQFT,Zindorf2024EfficientMCG}; and (v)~hybrid edge schemes that keep shallow quantum layers~\cite{Geng2022HybridNISQEdge,Shubha2024EdgeDetectionQuantumized} while adopting cheaper FRQI preparation.
+
+Promising extensions to this thesis include:
+
+\begin{itemize}
+    \item running the experiments on real IBM hardware, to understand the differences between simulated and real environments,
+    \item completing the $16\times 16$ v-chain density-matrix experiments, which were not possible due to memory constraints,
+    \item zero-noise extrapolation and richer mitigation stacks beyond the size of $2\times 2$ readout inversion,
+    \item comparing additional \texttt{MCXGate} modes from recent papers,
+    \item hybrid edge schemes that keep shallow quantum layers while adopting cheaper FRQI preparation.
+\end{itemize}

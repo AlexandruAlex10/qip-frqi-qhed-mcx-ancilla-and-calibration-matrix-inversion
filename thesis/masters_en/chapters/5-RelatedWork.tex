@@ -1,7 +1,7 @@
 \chapter{Theoretical background and related work}\label{ch:related}
 \thispagestyle{pagestyle}
 
-This chapter builds the vocabulary the rest of the thesis relies on. The minimum quantum-computing background comes first, followed by the classical image and edge metrics used for scoring. From there the chapter surveys quantum image representations and edge detectors, explains the NISQ constraints and the multi-controlled synthesis choice at the heart of the study, and then positions this work against the literature~\cite{NielsenChuang2010,Ruan2021OpportunitiesChallenges,Wang2022ReviewQIP}.
+This chapter creates the state-of-the-art for this thesis. The minimum quantum-computing background comes first, followed by the classical image and edge metrics used for scoring. From there the chapter surveys quantum image representations and edge detectors, explains the NISQ constraints and the multi-controlled synthesis choice at the heart of the study, and then positions this work against the literature~\cite{NielsenChuang2010,Ruan2021OpportunitiesChallenges,Wang2022ReviewQIP}.
 
 \section{Quantum computing essentials}
 
@@ -103,7 +103,7 @@ This separation matters for FRQI, where the color qubit stores each pixel's gray
   \draw[arr] (pos) -- node[midway, right=1mm, font=\scriptsize, align=left] {multi-controlled\\steering} (col);
   \draw[arr] (col) -- node[midway, right=1mm, font=\scriptsize, align=left] {shots /\\density matrix} (meas);
 \end{tikzpicture}
-\caption{Conceptual FRQI data flow: addresses live in the position register; each pixel angle is applied conditional on address comparisons; classical readout reconstructs an image.}
+\caption{FRQI data flow: addresses live in the position register; each pixel angle is applied conditional on address comparisons; classical readout reconstructs an image.}
 \label{fig:frqi-flow}
 \end{figure}
 
@@ -117,7 +117,7 @@ These limits hurt quantum image processing twice over. First, just \emph{prepari
 \subsection{Noise models and simulation cost}
 To predict how a circuit behaves on imperfect hardware without owning a quantum computer, the noise is imitated in software. The simplest useful model is the \emph{depolarizing channel}, applied after each single- and two-qubit gate (Qiskit Aer's density-matrix backend supports this directly). The idea is easy to picture. After a gate, with some small probability $p$ the qubit's information is thrown away and replaced by complete randomness (the \emph{maximally mixed state}, which keeps no useful structure), while with probability $1-p$ the qubit is untouched. A single gate with tiny $p$ barely matters, but a deep circuit applies thousands of gates, and these small chances accumulate, so the final state drifts steadily toward randomness. This gradual loss of quantum structure is what the terms \emph{coherence} and \emph{purity} measure, and it is the core reason deep circuits fail on real devices.
 
-Simulating this faithfully is expensive, and the cost depends on what the simulator must store. A noiseless run can use \emph{statevector} simulation, which keeps the $2^n$ complex amplitudes of an $n$-qubit pure state. Once noise mixes the state, a pure-state description no longer suffices: the simulator must switch to a \emph{density matrix}, an $n$-qubit state's full description as a $2^n\times 2^n$ table, i.e.\ $4^n$ real numbers. That squares the memory: going from $2^n$ to $4^n$ means each extra qubit roughly quadruples the storage instead of doubling it. Near $n\approx 16$ this exhausts commodity RAM, which is why some $16\times 16$ v-chain circuits in this study are skipped unless heavy-memory flags are set~\cite{NielsenChuang2010}.
+Simulating this faithfully is expensive, and the cost depends on what the simulator must store. A noiseless run can use \emph{statevector} simulation, which keeps the $2^n$ complex amplitudes of an $n$-qubit pure state. Once noise mixes the state, a pure-state description no longer suffices: the simulator must switch to a \emph{density matrix}, an $n$-qubit state's full description as a $2^n\times 2^n$ table, i.e.\ $4^n$ real numbers. That squares the memory: going from $2^n$ to $4^n$ means each extra qubit roughly quadruples the storage instead of doubling it. Near $n\approx 16$ this exhausts RAM that is currently available on the budget machine available on the market.~\cite{NielsenChuang2010}.
 
 Depolarizing noise is a deliberate simplification. The most general physically valid noise process is a completely positive, trace-preserving map, which can always be written as a short list of matrices (a \emph{Kraus} decomposition); the depolarizing channel is just one easy-to-specify member of that family, chosen here because it needs only a single number $p$ per gate type and plugs cleanly into Qiskit~\cite{NielsenChuang2010}. Real hardware also suffers slower, time-correlated (non-Markovian) effects such as calibration drift and $1/f$ flux noise, which can dominate in practice but are deliberately left outside the simulator configuration used here.
 
@@ -164,7 +164,7 @@ The novel enhanced quantum representation (NEQR) makes the opposite choice~\cite
 
 \begin{table}[htbp]
 \centering
-\caption{Qualitative comparison of image encodings (after~\cite{Le2011FRQI,Zhang2013NEQR,Wang2022ReviewQIP}). Survey-level roadmaps consistently highlight state preparation, not only operator design, as the dominant engineering bottleneck~\cite{Farooq2025SystematicReview,Ruan2021OpportunitiesChallenges}.}
+\caption{Comparison of image encodings (after~\cite{Le2011FRQI,Zhang2013NEQR,Wang2022ReviewQIP}). Survey-level roadmaps highlight state preparation as one of the dominant engineering bottlenecks~\cite{Farooq2025SystematicReview,Ruan2021OpportunitiesChallenges}.}
 \label{tab:repr-compare}
 \begin{tabular}{p{2.2cm}p{3.8cm}p{3.8cm}p{3.8cm}}
 \toprule
@@ -185,7 +185,7 @@ Published experiments usually stick to small images ($8\times 8$, $16\times 16$,
 \section{Classical and quantum edge detection}
 Once an image is encoded, the goal is to actually find its edges. Two broad strategies appear in the literature. The first exploits a quantum transform that is natural to the encoding; this is QHED, the detector used in this thesis. The second rebuilds the classical Sobel operator inside a quantum circuit. They differ in how closely they imitate the classical gradient, and that difference matters because the output here is ultimately scored against a Sobel reference (\Cref{sec:classical-metrics}).
 
-\subsection{Quantum Hadamard edge detection (QHED)}
+\subsection{Quantum Hadamard Edge Detection}
 Edge detection asks a simple question at every pixel: is the brightness here noticeably different from the pixel next to it? QHED, introduced by Yao \textit{et al.}~\cite{Yao2017QHED} (with a step-by-step FRQI+QHED notebook in the Qiskit textbook~\cite{QiskitTextbookQuantumEdgeDetection}), answers this with one clever use of the Hadamard gate. Recall that the encoding lays the pixel intensities out as amplitudes indexed by position, so neighbouring pixels sit at adjacent addresses. Applying a Hadamard to the lowest position qubit acts on each even--odd pair of neighbours at once and replaces them with their normalized \emph{sum} and \emph{difference}. The sum just reports local brightness, but the difference is large only where two neighbours disagree, that is, at an edge. Keeping the part of the state that holds these differences therefore produces a horizontal gradient for the whole image in a single operation. A one-pixel shift of the amplitudes (an increment on the position register) followed by a second Hadamard then catches the boundaries that fell \emph{between} the first set of pairs, so no edge is skipped.
 
 This is why QHED is emphatically \emph{not} a Sobel filter. It computes a one-dimensional first difference along the scan direction (a bare $[-1,+1]$ contrast between immediate neighbours), whereas Sobel averages over a $3\times 3$ window and combines two axes (\Cref{sec:classical-metrics}). The two agree on clean, low-resolution edges but drift apart as detail grows: even when the FRQI reconstruction is perfect, the SSIM of the QHED edge map against a Sobel reference can fall at higher resolution simply because the two operators define ``contrast'' differently.
@@ -216,17 +216,17 @@ Each limit bites in a specific way. \emph{Coherence time} caps how long a circui
 \label{fig:tikz-swap}
 \end{figure}
 
-\subsection{What simulators capture and omit}
+\subsection{What simulators capture and what they omit}
 A simulator reveals some things and hides others, and it helps to be explicit about which. Density-matrix simulation with depolarizing channels answers one specific question: \emph{how fragile is the ideal circuit under a simple, memoryless gate-error model?} ``Memoryless'' here (technically \emph{Markovian}) means each gate's error is independent of everything that came before, with no slow drift and no memory of earlier operations. Real hardware is messier and adds several effects on top: \emph{drift} (the calibration sliding out of tune over time), \emph{temporal correlations} (errors that do depend on the recent past), \emph{spectator qubits} and \emph{crosstalk} (idle or neighbouring qubits nudging the ones in use), and \emph{pulse distortion} (the analog control signals not keeping their intended shape). All of these are costly to measure and fold faithfully into a simulator~\cite{Preskill2018NISQ,Geng2023ImprovedFRQI}. The scope here is therefore deliberate: by holding the same noise model fixed across the naive and v-chain preparations, the \emph{paired} comparison isolates the effect of the preparation structure itself instead of chasing device-specific quirks. The practical consequence is that a large simulated fidelity gap should be read as a hypothesis to confirm on real hardware with layout-aware compilation, not as a deployment guarantee.
 
 \section{Multi-controlled gate synthesis}
 FRQI preparation compares the position register against each pixel address, applies multi-controlled $X$ patterns, and steers an $R_y$ rotation on the color qubit. The cost of a multi-controlled $X$ depends heavily on whether ancillas are available and on the decomposition used~\cite{Vale2023MCSU2,Azevedo2024LowDepthMCG,Arsoski2024MCXQFT,Zindorf2024EfficientMCG}. Qiskit's \texttt{MCXGate} exposes modes such as \texttt{noancilla} (no clean ancillas, large CX substructure per slice in the worst case) and \texttt{v-chain} (dirty ancillas, more qubits but often lower CX after transpilation). This thesis compares those two engineering modes while keeping the abstract FRQI state fixed.
 
-The essential trade is ancilla qubits against CNOT depth. V-chain constructions are attractive when ancillas can be borrowed from idle workspace, because they shorten the sequential CX chains that dominate error accumulation~\cite{Azevedo2024LowDepthMCG}. No-ancilla decompositions avoid widening the Hilbert space but can explode two-qubit counts, which is why this study only fully transpiles them at the smallest image where compilation stays tractable~\cite{Zindorf2024EfficientMCG}. The QFT-based constructions surveyed by Arsoski show that multi-controlled gates are not monolithic and that their best realization can depend on circuit context~\cite{Arsoski2024MCXQFT}; the present scope is narrower, treating the two built-in Qiskit strategies as proxies for ``expensive but compact'' versus ``cheaper but wider.'' \Cref{tab:mcx-scaling} states the informal scaling.
+The essential trade is ancilla qubits against CNOT depth. V-chain constructions are attractive when ancillas can be borrowed from idle workspace, because they shorten the sequential CX chains that dominate error accumulation~\cite{Azevedo2024LowDepthMCG}. Noancilla decompositions avoid widening the Hilbert space but can explode two-qubit counts, which is why this study only fully transpiles them at the smallest image where compilation stays tractable~\cite{Zindorf2024EfficientMCG}. The QFT-based constructions surveyed by Arsoski show that multi-controlled gates are not monolithic and that their best realization can depend on circuit context~\cite{Arsoski2024MCXQFT}; the present scope is narrower, treating the two built-in Qiskit strategies as proxies for ``expensive but compact'' versus ``cheaper but wider.'' \Cref{tab:mcx-scaling} states the informal scaling.
 
 \begin{table}[htbp]
 \centering
-\caption{Informal asymptotic scaling for FRQI-style preparation (orders hide basis-dependent constants; parallel schedules are not assumed).}
+\caption{Informal asymptotic scaling for FRQI-style preparation.}
 \label{tab:mcx-scaling}
 \small
 \begin{tabular}{p{3.6cm}p{2.4cm}p{2.4cm}p{4.6cm}}
@@ -249,11 +249,11 @@ Since every true state must be reported as \emph{something}, each column adds up
 \emph{Mitigation} simply runs this relationship backwards. Solving $\mathbf{p}' = A\mathbf{p}$ for the unknown true probabilities gives $\mathbf{p} = A^{-1}\mathbf{p}'$, which subtracts the systematic bias back out of the measured counts. When the device is noisy, $A$ sits close to having no inverse (it is \emph{ill-conditioned}), and a plain inversion would magnify the ordinary shot-to-shot scatter; adding a small \emph{Tikhonov} term keeps the solution stable at the price of a slight, deliberate bias. This work implements exactly this $2\times 2$ correction on the FRQI color qubit, kept separate from the density-matrix depolarizing study so that the two error sources are not conflated. The arrangement shows cleanly how a mitigation layer would sit \emph{in front of} intensity decoding: correct the color-qubit statistics first, then turn the corrected probabilities back into a grayscale value~\cite{Mu2025GuidedImageFiltering}.
 
 \section{Positioning of this thesis}
-\Cref{tab:positioning} contrasts this work with typical prior efforts. Relative to representation surveys~\cite{Ruan2021OpportunitiesChallenges,Farooq2025SystematicReview} and NEQR edge variants~\cite{Fan2019SobelNEQR,Liu2022EightDirectionSobelNEQR}, this thesis contributes a paired structural and noisy-simulation study of FRQI preparation only, with QHED held constant. Relative to improved-FRQI hardware studies~\cite{Geng2023ImprovedFRQI}, it offers open, simulator-first evidence at several resolutions with explicit resource tables and honest missing-data flags at $16\times 16$. The aim is reproducible, NISQ-oriented engineering insight, not a new edge-detection operator.
+In \Cref{tab:positioning} the thesis is being compared with other works based on certain factors.
 
 \begin{table}[htbp]
 \centering
-\caption{Positioning relative to typical prior work (qualitative).}
+\caption{Positioning relative to typical prior work.}
 \label{tab:positioning}
 \small
 \begin{tabular}{p{2.8cm}p{3.5cm}p{3.5cm}p{3.5cm}}

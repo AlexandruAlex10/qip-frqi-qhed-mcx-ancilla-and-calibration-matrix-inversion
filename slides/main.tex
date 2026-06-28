@@ -17,16 +17,13 @@
 \title[NISQ FRQI]{NISQ-oriented structural optimization of FRQI state preparation for quantum edge detection}
 \subtitle{Quantum Computing Master thesis defence}
 \author{Alexandru Mitrofan}
-\institute{Politehnica University of Timișoara}
-\date{June 2026}
+\institute{Politehnica  University of Timișoara}
+\date{July 2026}
 
 \begin{document}
 
 \begin{frame}
   \titlepage
-  \begin{center}
-    {\footnotesize Repository: \url{https://github.com/AlexandruAlex10/qip-frqi-qhed-mcx-ancilla-and-calibration-matrix-inversion}}
-  \end{center}
   \note{Introduce yourself; state that the work is simulator-based FRQI + QHED with a controlled comparison of MCX synthesis modes.}
 \end{frame}
 
@@ -41,16 +38,18 @@
 
 \begin{frame}{Contributions}
   \begin{itemize}
-    \item \textbf{Empirical:} structural CX/depth comparison (naive vs v-chain), a noisy-simulator robustness study, and a $2\times2$ readout-mitigation proof of concept.
-    \item \textbf{Main (methodological):} a transparent recipe that reports \emph{resources, fidelity, and edge scores together} on one grid -- so a gate-count headline cannot hide an inconclusive application result.
+    \item structural CX/depth comparison (naive vs v-chain).
+    \item noisy-simulator robustness study.
+    \item $2\times2$ readout-mitigation proof of concept.
+    \item transparent recipe that reports \emph{resources, fidelity, and edge scores together}.
   \end{itemize}
   \note{Lead with the contribution. The methodological recipe is the part that generalizes beyond FRQI/QHED. All claims tie to versioned CSV manifests and Python scripts in the repo.}
 \end{frame}
 
-\begin{frame}{Pipeline (fixed downstream)}
+\begin{frame}{Pipeline}
   \begin{itemize}
     \item \textbf{FRQI:} intensities as $R_y$ angles on a color qubit indexed by an address register ($m=2\log_2 N$ qubits).
-    \item \textbf{QHED:} FWHT-style stage + classical Sobel scoring on decoded rasters (from \texttt{src/qhed.py}).
+    \item \textbf{QHED:} FWHT-style stage + classical Sobel scoring on decoded rasters.
     \item \textbf{Compared:} \texttt{MCXGate} \texttt{noancilla} (naive) vs \texttt{v-chain}; same logical state, same QHED code path.
     \item \textbf{Flow:} decode $\rho \rightarrow$ raster $\rightarrow$ FWHT $\rightarrow$ magnitude $\rightarrow$ inverse $\rightarrow$ compare to Sobel reference.
   \end{itemize}
@@ -68,26 +67,25 @@
 
 \begin{frame}{Naive vs v-chain (toy view)}
   \begin{center}
-    \includegraphics[width=0.88\linewidth,height=0.52\textheight,keepaspectratio]{toy_naive_vs_vchain.pdf}
+    \includegraphics[width=0.88\linewidth,height=0.88\textheight,keepaspectratio]{toy_naive_vs_vchain.pdf}
   \end{center}
   \vspace{-0.35cm}
-  {\footnotesize Repository figure: \texttt{thesis/design/figures/} (script \texttt{toy\_and\_block\_level\_diagrams.py}).}
   \note{Left: conceptual single box; right: ancilla ladder + uncompute pattern repeated per pixel in full FRQI. Block-level and transpiled-stub diagrams are in the backup slides.}
 \end{frame}
 
 \begin{frame}{What is measured}
   \begin{itemize}
-    \item \textbf{Resources:} qubits, depth, CX after transpilation (structural study at optimization level~3).
-    \item \textbf{Noise:} depolarizing density-matrix sweeps; PSNR, SSIM, fidelity (frozen bundles at optimization level~0).
-    \item \textbf{Edges:} QHED vs Sobel SSIM on noisy reconstructions (paired naive vs v-chain rows).
-    \item \textbf{Readout:} $2\times2$ confusion matrix inversion slice on $4\times4$ (proof of concept).
+    \item \textbf{Resources:} qubits, depth, CX after transpilation.
+    \item \textbf{Noise:} depolarizing density-matrix sweeps; PSNR, SSIM, fidelity.
+    \item \textbf{Edges:} QHED vs Sobel SSIM on noisy reconstructions.
+    \item \textbf{Readout:} $2\times2$ confusion matrix inversion slice on $4\times4$.
   \end{itemize}
   \note{Mention manifests in outputs/ and thesis/results\_configuration.md for reproducibility. The point of reporting all four families is the methodological contribution.}
 \end{frame}
 
 \begin{frame}{Ideal encoding \& QHED vs Sobel}
   \begin{itemize}
-    \item \textbf{Encoding is lossless} in simulation: FRQI reconstruction reaches SSIM $=1$ at every test size.
+    \item \textbf{Encoding is flawless} in simulation: FRQI reconstruction reaches SSIM $=1$ at every test size.
     \item \textbf{QHED vs classical Sobel} agrees at $4\times4$ but diverges as resolution grows: SSIM $\approx0.16$ at $8\times8$, $\approx0.01$ at $16\times16$.
     \item This is \emph{by design} -- QHED is a Walsh--Hadamard contrast stage, not a Sobel gradient clone -- not an encoding error.
   \end{itemize}
@@ -95,18 +93,8 @@
 \end{frame}
 
 \begin{frame}{Structural resources vs image size}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.49\linewidth}
       \centering
-      \includegraphics[width=\linewidth,height=0.30\textheight,keepaspectratio]{fig_cx_vs_image_size.png}\\[-0.15em]
-      {\scriptsize Transpiled CX (\texttt{optimization\_level}~3)}
-    \end{column}
-    \begin{column}{0.49\linewidth}
-      \centering
-      \includegraphics[width=\linewidth,height=0.30\textheight,keepaspectratio]{fig_depth_vs_image_size.png}\\[-0.15em]
-      {\scriptsize Transpiled depth}
-    \end{column}
-  \end{columns}
+      \includegraphics[width=0.88\linewidth,height=0.88\textheight,keepaspectratio]{fig_cx_vs_image_size.png}\\[-0.15em]
   \vspace{0.2cm}
   {\footnotesize \textbf{Takeaway:} $\sim$10$\times$ fewer CX (v-chain $\approx$11.6k vs scaled naive $\approx$114k at $16\times16$), at the cost of more qubits.}
   \note{Headline resource result: at $16\times16$, v-chain $\approx$11.6k CX vs scaled naive $\approx$114k CX (thesis Results), roughly tenfold. V-chain uses more qubits but fewer CX layers; DM runtime can still dominate at larger $n$.}
@@ -124,13 +112,13 @@
 \begin{frame}{The key result: edges do not follow CX}
   \begin{itemize}
     \item Edge SSIM (QHED on noisy reconstruction vs Sobel on the clean original) is the headline application endpoint.
-    \item Across eight paired noise cells, the median $\Delta$ (v-chain$-$naive) is \emph{negative}; exploratory Wilcoxon $p\approx0.078$.
+    \item Across eight paired noise cells, the median $\Delta$ (v-chain$-$naive) is \emph{negative}.
     \item So the large CX saving does \textbf{not} translate into better edge maps under this noise grid.
   \end{itemize}
   \note{This is the crux: a resource win that does not carry through to the application. Edge SSIM couples FRQI noise, decoding, QHED nonlinearity, and Sobel mismatch. Exactly why resources and application metrics are reported together.}
 \end{frame}
 
-\begin{frame}{Readout mitigation (synthetic)}
+\begin{frame}{Readout mitigation}
   \begin{center}
     \includegraphics[width=0.72\linewidth]{readout_mitigation_shot_sweep.png}
   \end{center}
@@ -142,18 +130,17 @@
 \begin{frame}{Main takeaway}
   \begin{itemize}
     \item V-chain can \textbf{substantially reduce} transpiled CX/depth for the same FRQI state at larger $N$.
-    \item Under the thesis noise grid, \textbf{edge SSIM does not} show a significant naive$\rightarrow$v-chain win (exploratory Wilcoxon $p\approx0.078$ on eight paired noise cells).
-    \item \textbf{Contribution / lesson:} report resources \emph{and} application metrics together; gate-count reductions are not automatic image wins on NISQ-style models.
+    \item Under the thesis noise grid, \textbf{edge SSIM does not} show a significant naive$\rightarrow$v-chain win.
   \end{itemize}
   \note{Honest limitation: simulator only; 16$\times$16 v-chain DM often skipped; scaled naive extrapolates one slice. Close by restating the methodological contribution.}
 \end{frame}
 
 \begin{frame}{Limitations \& future work}
   \begin{itemize}
-    \item No hardware shots; mock NISQ bundle is optional evidence only.
-    \item Tiny images; small statistical $n$; scaled naive baseline extrapolates from one transpiled slice.
-    \item Missing v-chain noisy/edge cells at $16\times16$ (density-matrix cost); Wilcoxon uses eight paired cells only.
-    \item Future: layout-aware hardware runs, richer mitigation, complete v-chain DM at $16\times16$ if memory allows.
+    \item No experiments ran on IBM backend.
+    \item Tiny images; small statistical $n$.
+    \item Missing v-chain noisy/edge cells at $16\times16$ image (density-matrix cost, insufficient RAM).
+    \item Future: run hardware runs, richer mitigation, complete v-chain DM at $16\times16$ experiments.
   \end{itemize}
   \note{Align with Conclusions: under-claim relative to the resource win; honest about extrapolation and missing cells.}
 \end{frame}
@@ -166,7 +153,7 @@
 
 \appendix
 
-\begin{frame}{Backup: where it lives in the repo}
+\begin{frame}{Extra: where it lives in the repo}
   \begin{itemize}
     \item \textbf{Repository:} \url{https://github.com/AlexandruAlex10/qip-frqi-qhed-mcx-ancilla-and-calibration-matrix-inversion}
     \item \textbf{Encoding / QHED / metrics:} \texttt{src/frqi.py}, \texttt{src/qhed.py}, \texttt{src/metrics.py}
@@ -177,28 +164,27 @@
   \note{Tie claims to concrete modules so examiners see the implementation is inspectable.}
 \end{frame}
 
-\begin{frame}{Backup: sequential preparation (block view)}
+\begin{frame}{Extra: sequential preparation (block view)}
   \begin{center}
     \includegraphics[width=0.85\linewidth,height=0.52\textheight,keepaspectratio]{block_frqi_prep.pdf}
   \end{center}
   \note{Walk through init H on addresses, loop compare--rotate--uncompute, transpile to \{cx,rz,sx\}.}
 \end{frame}
 
-\begin{frame}{Backup: minimal transpiled MCX stub}
+\begin{frame}{Extra: minimal transpiled MCX stub}
   \begin{center}
     \includegraphics[width=0.88\linewidth,height=0.48\textheight,keepaspectratio]{stub_mcx_vchain.png}
   \end{center}
-  {\footnotesize Qiskit transpile preview (\texttt{scripts/qiskit\_stub\_draw.py}).}
   \note{Concrete reminder that ``MCX mode'' is not abstract---it becomes many CX layers after transpilation.}
 \end{frame}
 
-\begin{frame}{Backup: reproduction order (thesis App.~B)}
+\begin{frame}{Extra: reproduction order (thesis App.~B)}
   \small
   \begin{enumerate}
     \item \texttt{pytest}
     \item \texttt{python scripts/frqi\_qhed\_sobel.py}
     \item \texttt{python scripts/frqi\_structural\_resources.py}
-    \item \texttt{python scripts/noisy\_frqi\_sweep.py} (\texttt{--allow-heavy-dm} only if RAM allows)
+    \item \texttt{python scripts/noisy\_frqi\_sweep.py} (\texttt{--allow-heavy-dm} flag only if RAM allows)
     \item \texttt{python scripts/noisy\_recon\_qhed\_edge\_metrics.py}
     \item \texttt{python scripts/readout\_mitigation\_shot\_sweep.py}
     \item \texttt{python scripts/build\_results\_tables.py --require-figures}

@@ -49,7 +49,7 @@ This is a **conceptual** worst case for “no ancilla assistance”; the exact g
 ### 2.3 Failure modes (ablation hooks)
 
 - **Routing and coupling map:** On hardware, long chains may lose CX savings if **SWAP insertion** dominates.
-- **Ancilla availability:** If **\(m-2\)** clean or dirty ancillas are unavailable, fallback modes increase depth or force no-ancilla decompositions.
+- **Ancilla availability:** If **\(m-2\)** clean or dirty ancillas are unavailable, fallback modes increase depth or force noancilla decompositions.
 - **Readout dominates:** For very small demos, **SPAM** can mask gate-depth improvements unless mitigation (readout spec) is applied.
 
 ## 3. QHED attachment (scope note)
