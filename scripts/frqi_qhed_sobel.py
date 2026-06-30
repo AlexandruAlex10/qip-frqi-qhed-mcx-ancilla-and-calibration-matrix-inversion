@@ -55,13 +55,13 @@ def run_case(name: str) -> dict:
     frqi_ssim = ssim_uint8(img, recon)
     qhed_sobel_ssim = ssim_uint8(edge_q, edge_c)
 
-    print(f"=== {name} ===")
-    print("FRQI reconstruction MSE:", frqi_mse)
-    print("FRQI reconstruction PSNR:", frqi_psnr)
-    print("FRQI reconstruction similarity (ssim_like):", ssim_like(img, recon))
-    print("FRQI reconstruction SSIM (skimage):", frqi_ssim)
-    print("QHED vs Sobel similarity (ssim_like):", ssim_like(edge_q, edge_c))
-    print("QHED vs Sobel SSIM (skimage):", qhed_sobel_ssim)
+    print(f"=== {name} ===", flush=True)
+    print("FRQI reconstruction MSE:", frqi_mse, flush=True)
+    print("FRQI reconstruction PSNR:", frqi_psnr, flush=True)
+    print("FRQI reconstruction similarity (ssim_like):", ssim_like(img, recon), flush=True)
+    print("FRQI reconstruction SSIM (skimage):", frqi_ssim, flush=True)
+    print("QHED vs Sobel similarity (ssim_like):", ssim_like(edge_q, edge_c), flush=True)
+    print("QHED vs Sobel SSIM (skimage):", qhed_sobel_ssim, flush=True)
 
     fig_cmp, axes = plt.subplots(1, 3, figsize=(8, 3))
     axes[0].imshow(img, cmap="gray", vmin=0, vmax=255)
@@ -118,11 +118,13 @@ def run_case(name: str) -> dict:
 
 if __name__ == "__main__":
     rows = []
-    for case_name in ["test_4x4", "test_8x8", "test_16x16"]:
+    cases = ["test_4x4", "test_8x8", "test_16x16"]
+    for i, case_name in enumerate(cases, start=1):
+        print(f"[{i}/{len(cases)}] Processing {case_name}...", flush=True)
         rows.append(run_case(case_name))
 
     df = pd.DataFrame(rows)
     csv_path = OUT / "frqi_qhed_sobel_metrics.csv"
     df.to_csv(csv_path, index=False)
 
-    print(f"Saved figures and {csv_path.name} to {OUT}")
+    print(f"Saved figures and {csv_path.name} to {OUT}", flush=True)

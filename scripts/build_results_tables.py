@@ -501,12 +501,13 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if not cfg_path.is_file():
-        print(f"ERROR: config not found: {cfg_path}", file=sys.stderr)
+        print(f"ERROR: config not found: {cfg_path}", file=sys.stderr, flush=True)
         return 2
 
     config = load_yaml_config(cfg_path)
     fail_on_stale = bool(args.strict)
     require_figures = bool(args.require_figures or args.strict)
+    print(f"Ingesting outputs/ per {cfg_path.name}...", flush=True)
     report, frames = ingest(
         repo_root,
         config,
@@ -516,10 +517,10 @@ def main() -> int:
     )
 
     for w in report.warnings:
-        print(f"WARNING: {w}", file=sys.stderr)
+        print(f"WARNING: {w}", file=sys.stderr, flush=True)
     if report.errors:
         for e in report.errors:
-            print(f"ERROR: {e}", file=sys.stderr)
+            print(f"ERROR: {e}", file=sys.stderr, flush=True)
         (out_dir / "ingestion_report.json").write_text(
             json.dumps(
                 {
@@ -535,6 +536,7 @@ def main() -> int:
         )
         return 1
 
+    print(f"Loaded {len(report.loaded)} dataset(s); writing tables...", flush=True)
     # --- tables ---
     md_chunks: list[str] = ["# Generated results tables\n"]
     tex_chunks: list[str] = ["% Generated results tables\n"]
@@ -604,6 +606,7 @@ def main() -> int:
     )
     _write_bachelors_tex_fragment(repo_root, "results_tables.tex", bundle)
 
+    print("Computing stats...", flush=True)
     # --- stats ---
     stats_md: list[str] = ["# Paired statistics (exploratory)\n"]
     stats_json: dict[str, Any] = {}
@@ -629,6 +632,7 @@ def main() -> int:
     (out_dir / "stats.md").write_text("\n".join(stats_md), encoding="utf-8")
     (out_dir / "stats.json").write_text(json.dumps(stats_json, indent=2), encoding="utf-8")
 
+    print("Emitting figures...", flush=True)
     # --- figures ---
     fig_dir = out_dir / "figures"
     fig_written = emit_figures(repo_root, frames, fig_dir)
@@ -658,7 +662,7 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    print(f"OK: wrote artifacts under {out_dir}")
+    print(f"OK: wrote artifacts under {out_dir}", flush=True)
     return 0
 
 

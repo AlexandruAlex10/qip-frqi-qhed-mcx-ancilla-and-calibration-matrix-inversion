@@ -21,7 +21,7 @@ def _save_both(fig: plt.Figure, stem: str) -> None:
     for fmt in ("pdf", "svg"):
         out = FIG_DIR / f"{stem}.{fmt}"
         fig.savefig(out, bbox_inches="tight", pad_inches=0.08, format=fmt)
-        print("Wrote", out)
+        print("Wrote", out, flush=True)
 
 
 def draw_toy_naive_vs_ancilla() -> None:
@@ -248,8 +248,11 @@ def draw_block_full_frqi() -> None:
 
 def main() -> None:
     sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+    print("Drawing toy_naive_vs_vchain...", flush=True)
     draw_toy_naive_vs_ancilla()
+    print("Drawing block_frqi_prep...", flush=True)
     draw_block_full_frqi()
+    print("Diagrams complete.", flush=True)
 
 
 if __name__ == "__main__":

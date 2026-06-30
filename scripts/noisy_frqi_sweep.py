@@ -294,21 +294,37 @@ def main() -> None:
 
     if args.noise_mode == "from_backend":
         if not args.mock_nisq_bundle and scales != [1.0]:
-            print("Note: --noise-mode from_backend ignores noise_scale sweeps; forcing scales=[1.0].")
+            print("Note: --noise-mode from_backend ignores noise_scale sweeps; forcing scales=[1.0].", flush=True)
         scales = [1.0]
 
+    total_steps = len(images) * len(scales) * len(methods)
+    print(
+        f"Starting noisy FRQI sweep: {len(images)} image(s) x {len(scales)} scale(s) x "
+        f"{len(methods)} method(s) = {total_steps} planned simulation(s) "
+        f"[noise_mode={args.noise_mode}].",
+        flush=True,
+    )
+
     rows: list[dict] = []
+    step = 0
     for img_name in images:
         img = np.load(DATA / f"{img_name}.npy")
         for s in scales:
             for method in methods:
+                step += 1
                 nq = _dm_qubits_for_method(img, method)
                 if nq > max_q:
                     print(
-                        f"Skip {img_name} {method}: {nq} qubits > dm-max {max_q}. "
-                        f"Use --allow-heavy-dm or raise --dm-max-qubits."
+                        f"[{step}/{total_steps}] Skip {img_name} {method}: {nq} qubits > dm-max {max_q}. "
+                        f"Use --allow-heavy-dm or raise --dm-max-qubits.",
+                        flush=True,
                     )
                     continue
+
+                print(
+                    f"[{step}/{total_steps}] Simulating {img_name} scale={s} method={method} ({nq} qubits)...",
+                    flush=True,
+                )
 
                 if args.noise_mode == "from_backend":
                     be, bid = _resolve_backend_for_nqubits(str(args.mock_backend), nq, seed=int(args.mock_backend_seed))
@@ -372,16 +388,23 @@ def main() -> None:
                         **r,
                     }
                 )
+                print(
+                    f"[{step}/{total_steps}] -> done {img_name} scale={s} method={method}: "
+                    f"fidelity={r.get('fidelity')}, psnr={r.get('psnr')}",
+                    flush=True,
+                )
 
     df = pd.DataFrame(rows)
     csv_path = OUT / str(args.csv_name)
     df.to_csv(csv_path, index=False)
+    print(f"Wrote {csv_path}", flush=True)
 
     stem = csv_path.stem
+    print(f"Writing curve figures for {len(images)} image(s)...", flush=True)
     for img_name in images:
         sub = df[df["image"] == img_name]
         if sub.empty:
-            print(f"No rows for {img_name}; skipping figure.")
+            print(f"No rows for {img_name}; skipping figure.", flush=True)
             continue
         fig, axes = plt.subplots(1, 3, figsize=(12, 3.5))
         for method in methods:
@@ -415,6 +438,7 @@ def main() -> None:
             fig_path = OUT / f"{stem}_{img_name}_curves.png"
         fig.savefig(fig_path, dpi=160)
         plt.close(fig)
+        print(f"Wrote {fig_path}", flush=True)
 
     if args.readout_demo:
         img = np.load(DATA / "test_4x4.npy")
@@ -441,9 +465,9 @@ def main() -> None:
             seed_simulator=args.seed,
             **demo_tkwargs,
         )
-        print("Readout mitigation demo (color qubit, single structural slice):")
-        print("  empirical confusion (rows=measured, cols=true):\n", conf)
-        print("  P(meas=1) raw:", raw, " mitigated:", mit)
+        print("Readout mitigation demo (color qubit, single structural slice):", flush=True)
+        print("  empirical confusion (rows=measured, cols=true):\n", conf, flush=True)
+        print("  P(meas=1) raw:", raw, " mitigated:", mit, flush=True)
 
     manifest = build_base_manifest(
         script="scripts/noisy_frqi_sweep.py",
@@ -474,8 +498,9 @@ def main() -> None:
     )
     write_manifest_json(OUT / str(args.manifest_name), manifest)
 
-    print("Wrote", csv_path)
-    print("Wrote", OUT / str(args.manifest_name))
+    print("Wrote", csv_path, flush=True)
+    print("Wrote", OUT / str(args.manifest_name), flush=True)
+    print("Noisy FRQI sweep complete.", flush=True)
 
 
 if __name__ == "__main__":

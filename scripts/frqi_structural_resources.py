@@ -129,13 +129,14 @@ def plot_structural_metrics_csv(csv_path: Path, out_dir: Path) -> tuple[Path, Pa
     fig2.savefig(depth_path, dpi=160)
     plt.close(fig2)
 
-    print(f"Wrote {cx_path} (combined CX+depth panels) and {depth_path}")
+    print(f"Wrote {cx_path} (combined CX+depth panels) and {depth_path}", flush=True)
     return cx_path, depth_path
 
 
 def _emit_csv() -> Path:
     rows: list[dict] = []
     for case in ("test_4x4", "test_8x8", "test_16x16"):
+        print(f"Transpiling struct_vchain for {case}...", flush=True)
         img = np.load(DATA / f"{case}.npy")
         n = int(img.shape[0])
         rows.append(
@@ -148,6 +149,7 @@ def _emit_csv() -> Path:
             )
         )
 
+    print("Transpiling struct_naive_full for test_4x4...", flush=True)
     img4 = np.load(DATA / "test_4x4.npy")
     rows.append(
         _row(
@@ -160,6 +162,7 @@ def _emit_csv() -> Path:
     )
 
     for n in (4, 8, 16):
+        print(f"Transpiling struct_naive_slice for test_{n}x{n}...", flush=True)
         m = required_position_qubits(n)
         n_pix = 2**m
         sl = build_single_address_ry_slice(m, 0, pi / 4.0, mode="noancilla")
@@ -182,7 +185,7 @@ def _emit_csv() -> Path:
     df = pd.DataFrame(rows)
     path = OUT / "frqi_structural_metrics.csv"
     df.to_csv(path, index=False)
-    print(f"Wrote {path}")
+    print(f"Wrote {path}", flush=True)
     return path
 
 
@@ -190,6 +193,7 @@ def _emit_constrained_layout_csv(*, backend_seed: int) -> Path:
     """Transpile-only resource rows on a linear-chain ``GenericBackendV2`` matching circuit width."""
     rows: list[dict] = []
     for case in ("test_4x4", "test_8x8", "test_16x16"):
+        print(f"Transpiling struct_vchain (constrained layout) for {case}...", flush=True)
         img = np.load(DATA / f"{case}.npy")
         n = int(img.shape[0])
         qc = build_frqi_prep_vchain(img)
@@ -207,6 +211,7 @@ def _emit_constrained_layout_csv(*, backend_seed: int) -> Path:
             )
         )
 
+    print("Transpiling struct_naive_full (constrained layout) for test_4x4...", flush=True)
     img4 = np.load(DATA / "test_4x4.npy")
     qc4 = build_frqi_prep_naive(img4)
     be4 = make_generic_linear_backend(int(qc4.num_qubits), seed=int(backend_seed))
@@ -224,6 +229,7 @@ def _emit_constrained_layout_csv(*, backend_seed: int) -> Path:
     )
 
     for n in (4, 8, 16):
+        print(f"Transpiling struct_naive_slice (constrained layout) for test_{n}x{n}...", flush=True)
         m = required_position_qubits(n)
         n_pix = 2**m
         sl = build_single_address_ry_slice(m, 0, pi / 4.0, mode="noancilla")
@@ -250,7 +256,7 @@ def _emit_constrained_layout_csv(*, backend_seed: int) -> Path:
     df = pd.DataFrame(rows)
     path = OUT / "frqi_structural_metrics_constrained.csv"
     df.to_csv(path, index=False)
-    print(f"Wrote {path}")
+    print(f"Wrote {path}", flush=True)
     return path
 
 
@@ -280,14 +286,19 @@ def main() -> None:
         if not csv_path.is_file():
             raise SystemExit(f"Missing {csv_path}; run without --plot-only first.")
         if not args.no_plot:
+            print("Plotting from existing CSV...", flush=True)
             plot_structural_metrics_csv(csv_path, OUT)
         return
 
+    print("Emitting structural CSV...", flush=True)
     _emit_csv()
     if args.emit_layout_csv:
+        print("Emitting constrained-layout CSV...", flush=True)
         _emit_constrained_layout_csv(backend_seed=int(args.layout_backend_seed))
     if not args.no_plot:
+        print("Plotting...", flush=True)
         plot_structural_metrics_csv(csv_path, OUT)
+    print("Structural FRQI resources complete.", flush=True)
 
 
 if __name__ == "__main__":

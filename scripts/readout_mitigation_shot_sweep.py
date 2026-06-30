@@ -170,7 +170,15 @@ def main() -> None:
 
     rows: list[dict] = []
 
-    for sd in seeds:
+    n_seeds = len(seeds)
+    print(
+        f"Starting readout mitigation sweep: {n_seeds} seed(s), "
+        f"shots_cal={int(args.shots_cal)}, shots_data={int(args.shots_data)} ({nq} qubits).",
+        flush=True,
+    )
+
+    for k, sd in enumerate(seeds, start=1):
+        print(f"[{k}/{n_seeds}] seed={sd} calibrating...", flush=True)
         confusion = estimate_single_qubit_readout_matrix(
             nq,
             0,
@@ -206,6 +214,7 @@ def main() -> None:
 
         p1_raw = float(probs[1])
         p1_mit = float(mit[1])
+        print(f"[{k}/{n_seeds}] seed={sd} -> p1_raw={p1_raw:.6f}, p1_mitigated={p1_mit:.6f}", flush=True)
 
         row = {
             "image": args.image,
@@ -240,7 +249,9 @@ def main() -> None:
     df = pd.DataFrame(rows)
     csv_path = OUT / str(args.csv_name)
     df.to_csv(csv_path, index=False)
+    print(f"Wrote {csv_path}", flush=True)
 
+    print("Building figure...", flush=True)
     fig, ax = plt.subplots(figsize=(8.5, 4.0))
     xs = np.arange(len(seeds), dtype=float)
     ax.plot(xs, df["p1_raw"], marker="o", label="P1 raw")
@@ -289,9 +300,10 @@ def main() -> None:
     )
     write_manifest_json(OUT / str(args.manifest_name), manifest)
 
-    print("Wrote", csv_path)
-    print("Wrote", fig_path)
-    print("Wrote", OUT / str(args.manifest_name))
+    print("Wrote", csv_path, flush=True)
+    print("Wrote", fig_path, flush=True)
+    print("Wrote", OUT / str(args.manifest_name), flush=True)
+    print("Readout mitigation sweep complete.", flush=True)
 
 
 if __name__ == "__main__":

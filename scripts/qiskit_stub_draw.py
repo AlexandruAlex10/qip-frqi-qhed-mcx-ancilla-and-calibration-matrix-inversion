@@ -34,10 +34,11 @@ def main() -> None:
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     out = OUT_DIR / "stub_mcx_vchain.png"
+    print("Drawing MCX v-chain stub circuit...", flush=True)
     # Use matplotlib to save with custom DPI
     fig = qc.draw(output="mpl", style="iqp", fold=40)
     fig.savefig(str(out), dpi=160, bbox_inches="tight")
-    print("Wrote", out)
+    print("Wrote", out, flush=True)
 
 
 if __name__ == "__main__":
